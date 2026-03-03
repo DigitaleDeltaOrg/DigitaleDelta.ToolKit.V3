@@ -1,0 +1,3 @@
+Naam,OData data type,Omschrijving,Toegevoegd,Definitie
+MeasurementObject,Edm.String,Meetobject/meetlocatie,,
+MonitoringNetwork,Edm.String,Meetnetten,,

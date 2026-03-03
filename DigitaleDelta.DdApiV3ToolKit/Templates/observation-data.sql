@@ -1,0 +1,33 @@
+select
+    internal_id,
+    id,
+    type,
+    valid_time_start,
+    phenomenon_time_start,
+    phenomenon_time_end,
+    result_time,
+    foi->>'Id' as foi_id,
+    foi->>'Code' as foi_code,
+    foi->>'Description' as foi_description,
+    geography,
+    organisation,
+    parameter->'Quantity' as parameter_quantity,
+    parameter->'OrganisationNamespace' as parameter_organisation_namespace,
+    parameter->'Parameter' as parameter_parameter,
+    parameter->'Compartment' as parameter_compartment,
+    parameter->'Purpose' as parameter_purpose,
+    parameter->'ValuationTechnique' as parameter_valuation_technique,
+    parameter->'ValuationMethod' as parameter_valuation_method,
+    parameter->'ValueProcessingMethod' as parameter_value_processing_method,
+    parameter->'LimitSymbol' as parameter_limit_symbol,
+    parameter->'TaxonAuthors' as parameter_taxon_authors,
+    modified_on,
+    result->>'Id' as result_id,
+    (result->'Measure'->>'Value')::numeric as result_measure_value,
+    result->'Measure'->>'Uom' as result_measure_uom,
+    result->'Vocab'->>'Vocabulary' as result_vocab_vocabulary,
+    result->'Vocab'->>'Verb' as result_vocab_verb,
+    result->>'Count' as result_count
+from observation
+where (@access AND @where AND @skiptoken)
+limit @limit

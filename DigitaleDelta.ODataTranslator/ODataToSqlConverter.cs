@@ -1,0 +1,506 @@
+﻿// Copyright (c) 2025 - EcoSys
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+
+using DigitaleDelta.ODataTranslator.Helpers;
+using DigitaleDelta.Contracts.Configuration;
+
+namespace DigitaleDelta.ODataTranslator;
+
+/// <summary>
+/// OData to SQL converter.
+/// </summary>
+/// <param name="propertyMaps">Map of OData properties to SQL properties</param>
+/// <param name="functionMaps">Map of OData functions to SQL functions</param>
+/// <param name="parameterPrefix">Prefix for parameters passed to SQL. Use '@;  for SQL Server, '$' for Postgres and ':' for Oracle</param>
+/// <param name="srid">Request srid</param>
+public class ODataToSqlConverter(Dictionary<string, ODataToSqlMap> propertyMaps, Dictionary<string, ODataFunctionMap> functionMaps, char parameterPrefix = '@', int srid = 4258)
+{
+    private readonly Dictionary<string, object> _parameters = [];
+    private int _parameterCount;
+
+    /// <summary>
+    /// SQL Result: a combination of the query and its parameters
+    /// </summary>
+    /// <param name="Sql">SQL statement</param>
+    /// <param name="Parameters">Parameters</param>
+    public record SqlResult(string Sql, IReadOnlyDictionary<string, object> Parameters);
+
+    /// <summary>
+    /// Known operators for OData to SQL conversion.
+    /// </summary>
+    private static readonly Dictionary<string, string> _oDataToSqlOperatorMaps = new()
+    {
+        { "eq", "=" },
+        { "ne", "<>" },
+        { "gt", ">" },
+        { "ge", ">=" },
+        { "lt", "<" },
+        { "le", "<=" }
+    };
+
+    /// <summary>
+    /// Get the property map for a given property name.
+    /// </summary>
+    /// <param name="propertyName"></param>
+    /// <returns></returns>
+    internal (bool Success, string? ErrorMessage, string? Query) TryGetPropertyMap(string propertyName)
+    {
+        if (string.Compare(propertyName, "null", StringComparison.Ordinal) == 0)
+        {
+            return (true, null, "NULL");
+        }
+
+        if (!propertyMaps.TryGetValue(propertyName, out var map))
+        {
+            return (false, string.Format(ErrorMessages.unknownProperty, propertyName), null);
+        }
+
+        if (map.DisallowInFilter)
+        {
+            return (false, string.Format(ErrorMessages.propertyNotAllowedInFilter, propertyName), null);
+        }
+
+        return (true, null, map.WhereClausePart ?? map.Query);
+    }
+
+    /// <summary>
+    /// Get the SQL function map for a given OData function name and arguments.
+    /// </summary>
+    /// <param name="functionName"></param>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    internal (bool Success, string? ErrorMessage, string? SqlFunction) TryGetFunctionMap(string functionName, string?[] arguments)
+    {
+        if (!functionMaps.TryGetValue(functionName, out var functionMap))
+        {
+            return (false, string.Format(ErrorMessages.unknownFunction, functionName), null);
+        }
+
+        if ((arguments.Length == 0) && functionMap.ExpectedArgumentTypes.Count == 0)
+        {
+            var zeroArgSql = functionMap.SqlFunctionFormat.Replace("@srid", srid.ToString());
+
+            if (!string.IsNullOrWhiteSpace(functionMap.ReturnType) && functionMap.ReturnType.Equals("Edm.Boolean", StringComparison.OrdinalIgnoreCase))
+            {
+                return (true, null, $"(({zeroArgSql}) = 1)");
+            }
+            return (true, null, zeroArgSql);
+        }
+
+        if (arguments.Length != functionMap.ExpectedArgumentTypes.Count)
+        {
+            return (false, string.Format(ErrorMessages.functionParameterCountMismatch, functionName, functionMap.ExpectedArgumentTypes.Count, arguments.Length), null);
+        }
+
+        if (functionMap.WildCardPosition != null && arguments.Length > 1 && !string.IsNullOrEmpty(arguments[1]))
+        {
+            var paramName = arguments[1];
+
+            if (paramName != null && paramName.StartsWith(parameterPrefix) && _parameters.TryGetValue(paramName, out var paramValue))
+            {
+                var stringValue = paramValue?.ToString() ?? string.Empty;
+
+                _parameters[paramName] = functionMap.WildCardPosition switch
+                {
+                    WildCardPosition.Right => $"{stringValue}{functionMap.WildCardSymbol}",
+                    WildCardPosition.Left => $"{functionMap.WildCardSymbol}{stringValue}",
+                    WildCardPosition.LeftAndRight => $"{functionMap.WildCardSymbol}{stringValue}{functionMap.WildCardSymbol}",
+                    _ => stringValue
+                };
+            }
+        }
+
+        var sqlFunction = string.Format(functionMap.SqlFunctionFormat.Replace("@srid", srid.ToString()), arguments.Cast<object>().ToArray());
+
+        if (!string.IsNullOrWhiteSpace(functionMap.ReturnType) &&
+            functionMap.ReturnType.Equals("Edm.Boolean", StringComparison.OrdinalIgnoreCase))
+        {
+            return (true, null, $"(({sqlFunction}) = 1)");
+        }
+
+        return (true, null, sqlFunction);
+    }
+
+
+    /// <summary>
+    /// Get the SQL operator map for a given OData comparison operator.
+    /// </summary>
+    /// <param name="operatorSymbol"></param>
+    /// <returns></returns>
+    internal static (bool Success, string? ErrorMessage, string? SqlOperator) TryGetOperatorMap(string operatorSymbol)
+    {
+        if (!_oDataToSqlOperatorMaps.TryGetValue(operatorSymbol, out var sqlOperator))
+        {
+            return (false, string.Format(ErrorMessages.unknownOperator, operatorSymbol), null);
+        }
+
+        return (true, null, sqlOperator);
+    }
+
+    /// <summary>
+    /// Convert an OData filter expression to a SQL WHERE clause.
+    /// </summary>
+    /// <param name="filterContext"></param>
+    /// <param name="error"></param>
+    /// <param name="result"></param>
+    /// <returns></returns>
+    public bool TryConvert(ODataParser.FilterOptionContext? filterContext, out string? error, out SqlResult? result)
+    {
+        _parameters.Clear();
+        _parameterCount = 0;
+
+        if (filterContext?.filterExpr() == null || filterContext.filterExpr().IsEmpty || string.IsNullOrEmpty(filterContext.filterExpr().GetText()))
+        {
+            error = null;
+            result = null;
+
+            return true;
+        }
+
+        var (success, errorMessage, sql) = TryConvertFilterExpressionToSql(filterContext.filterExpr());
+
+        if (!success)
+        {
+            error = errorMessage;
+            result = null;
+
+            return false;
+        }
+
+        error = null;
+        result = new SqlResult(sql!, new Dictionary<string, object>(_parameters));
+
+        return true;
+    }
+
+    /// <summary>
+    /// Convert an OData filter expression to a SQL WHERE clause.
+    /// </summary>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    private (bool Success, string? ErrorMessage, string? SqlQuery) TryConvertFilterExpressionToSql(ODataParser.FilterExprContext context)
+    {
+        if (context.IN() != null)
+        {
+            var leftExpr = context.filterExpr(0);
+            var leftResult = TryConvertFilterExpressionToSql(leftExpr);
+
+            return HandleInClause(context, leftResult.SqlQuery!);
+        }
+
+        if (context.primary() != null)
+        {
+            var propertyName = context.primary().GetText();
+
+            return propertyName.IsLiteralValue() ? HandleLiteral(propertyName) : TryGetPropertyMap(propertyName);
+        }
+
+        if (context.function() != null)
+        {
+            var function     = context.function();
+            var functionName = function.Start.Text;
+
+            if (!functionMaps.TryGetValue(functionName, out var functionMap))
+            {
+                return (false, string.Format(ErrorMessages.unknownFunction, functionName), null);
+            }
+
+            var arguments = function.filterExpr()
+                .Select(TryConvertFilterExpressionToSql)
+                .ToArray();
+            var argumentQueries = arguments.Select(arg => arg.SqlQuery).ToArray();
+
+            if (argumentQueries.Length != 0 || functionMap.ExpectedArgumentTypes.Count != 1)
+            {
+                return TryGetFunctionMap(functionName, argumentQueries);
+            }
+
+            var raw = function.GetText();
+            var lParen = raw.IndexOf('(');
+            var rParen = raw.LastIndexOf(')');
+
+            if (lParen < 0 || rParen <= lParen + 1)
+            {
+                return TryGetFunctionMap(functionName, argumentQueries);
+            }
+
+            var inner = raw.Substring(lParen + 1, rParen - lParen - 1).Trim();
+
+            if (string.IsNullOrWhiteSpace(inner) || !inner.IsLiteralValue())
+            {
+                return TryGetFunctionMap(functionName, argumentQueries);
+            }
+
+            var handled = HandleLiteral(inner);
+
+            if (handled.Success && !string.IsNullOrEmpty(handled.SqlQuery))
+            {
+                argumentQueries = [handled.SqlQuery];
+            }
+
+            return TryGetFunctionMap(functionName, argumentQueries);
+        }
+
+        if (context.filterExpr().Length == 1 && context.NOT() != null)
+        {
+            var inner = TryConvertFilterExpressionToSql(context.filterExpr(0));
+
+            return (true, null, $"NOT ({inner.SqlQuery})");
+        }
+
+        if (context.filterExpr().Length == 2 && context.comparison() != null)
+        {
+            var left           = TryConvertFilterExpressionToSql(context.filterExpr(0));
+            var right          = TryConvertFilterExpressionToSql(context.filterExpr(1));
+            var operatorSymbol = context.comparison().GetText();
+
+            if (left.SqlQuery != null && left.SqlQuery.Contains("distance", StringComparison.OrdinalIgnoreCase))
+            {
+                var threshold = ExtractParameterValue(right.SqlQuery);
+
+                if (threshold is double thresholdValueDouble )
+                {
+                    if ((thresholdValueDouble is < -90 or > 90) && (srid is 4258 or 4326))
+                    {
+                        return (false, "Distance error", null);
+                    }
+                }
+
+                if (threshold is int thresholdValueInteger)
+                {
+                    if ((thresholdValueInteger is < -90 or > 90) && (srid is 4258 or 4326))
+                    {
+                        return (false, ErrorMessages.distanceOutOfRange, null);
+                    }
+                }
+
+                var converted = ConvertDistanceToMetersIfNeeded(threshold, srid);
+
+                if (!string.IsNullOrEmpty(right.SqlQuery) && right.SqlQuery[0] == parameterPrefix && _parameters.ContainsKey(right.SqlQuery))
+                {
+                    _parameters[right.SqlQuery] = converted;
+                }
+                else
+                {
+                    right = (right.Success, right.ErrorMessage, CreateParameter(converted));
+                }
+            }
+
+            if (!left.Success || !right.Success)
+            {
+                return (false, left.ErrorMessage ?? right.ErrorMessage, null);
+            }
+
+            // Special handling for NULL comparisons
+            if (right.SqlQuery?.ToLower() == "'null'")
+            {
+                return operatorSymbol.ToLowerInvariant() switch
+                {
+                    "eq" => (true, null, $"{left.SqlQuery} IS NULL"),
+                    "ne" => (true, null, $"{left.SqlQuery} IS NOT NULL"),
+                    _ => (false, ErrorMessages.unknownOperator, string.Empty)
+                };
+            }
+
+            var (success, errorMessage, sqlOperator) = TryGetOperatorMap(operatorSymbol);
+
+            return (success, errorMessage, $"{left.SqlQuery} {sqlOperator} {right.SqlQuery}");
+        }
+
+        if (context.filterExpr().Length == 2 && (context.AND() != null || context.OR() != null))
+        {
+            var left            = TryConvertFilterExpressionToSql(context.filterExpr(0));
+            var right           = TryConvertFilterExpressionToSql(context.filterExpr(1));
+            var logicalOperator = context.AND() != null ? "AND" : "OR";
+            var leftQuery = context.filterExpr(0).AND() != null || context.filterExpr(0).OR() != null ? $"({left.SqlQuery})" : left.SqlQuery;
+            var rightQuery = context.filterExpr(1).AND() != null || context.filterExpr(1).OR() != null ? $"({right.SqlQuery})" : right.SqlQuery;
+
+            return (true, null, $"{leftQuery} {logicalOperator} {rightQuery}");
+        }
+
+        var innerExpression = TryConvertFilterExpressionToSql(context.filterExpr(0));
+
+        return (true, null, $"({innerExpression.SqlQuery})");
+    }
+
+    /// <summary>
+    /// Create a parameter for the SQL query.
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    private string CreateParameter(object value)
+    {
+        var name = $"{parameterPrefix}p{++_parameterCount}";
+
+        _parameters[name] = value;
+        return name;
+    }
+
+    /// <summary>
+    /// Handle the IN clause in the filter expression. This can cause multiple values to be passed in a single IN clause.
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="leftSql"></param>
+    /// <returns></returns>
+    private (bool Success, string? ErrorMessage, string? SqlQuery) HandleInClause(ODataParser.FilterExprContext context, string leftSql)
+    {
+        var parameterNames = new List<string>();
+        var foundOpenParen = false;
+        var leftExpression = context.filterExpr(0);
+
+        for (var i = 0; i < context.ChildCount; i++)
+        {
+            var text = context.GetChild(i).GetText().ToLower();
+
+            if (text == "(")
+            {
+                foundOpenParen = true;
+                continue;
+            }
+
+            if (!foundOpenParen || text == "in" || text == ")" || text == ",")
+            {
+                continue;
+            }
+
+            var values = text.Split([","], StringSplitOptions.RemoveEmptyEntries).ToList();
+
+            foreach (var value in values)
+            {
+                if (!value.IsLiteralValue())
+                {
+                    return (false, string.Format(ErrorMessages.mustBeALiteralValue, value), null);
+                }
+
+                if (!value.InferLiteralType().IsTypeCompatibleWith(GetParameterTypeForProperty(leftExpression.GetText())))
+                {
+                    return (false, string.Format(ErrorMessages.inClauseTypeMismatch, 0, leftExpression.GetText()), null);
+                }
+
+                parameterNames.Add(CreateParameter(value));
+            }
+        }
+
+        return (true, null, $"{leftSql} IN ({string.Join(",", parameterNames)})");
+    }
+
+    /// <summary>
+    /// Get parameter type for property
+    /// </summary>
+    /// <param name="propertyName">Property by name</param>
+    /// <returns></returns>
+    private string GetParameterTypeForProperty(string propertyName)
+    {
+        propertyMaps.TryGetValue(propertyName, out var map);
+
+        return map?.EdmType ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Handle a literal value in the filter expression.
+    /// </summary>
+    /// <param name="literal"></param>
+    /// <returns></returns>
+    internal (bool Success, string? ErrorMessage, string? SqlQuery) HandleLiteral(string literal)
+    {
+        if (LooksLikeWktLiteral(literal))
+        {
+            try
+            {
+                literal = UnwrapQuotes(literal);
+
+                var r = new NetTopologySuite.IO.WKTReader();
+                var g = r.Read(literal);
+
+                g.SRID = srid;
+
+                var (ok, g4258) = CrsHelper.TransformGeometry(srid, 4258, g);
+                var res = ok && g4258 != null ? g4258 : g;
+
+                res.SRID = 4258;
+
+                var w = new NetTopologySuite.IO.WKTWriter { MaxCoordinatesPerLine = int.MaxValue };
+
+                literal = w.Write(res); // vervang literal
+
+                return (true, null, CreateParameter(literal));
+            }
+            catch
+            {
+                return (true, null, CreateParameter(literal));
+            }
+        }
+
+        if (literal.Equals("null", StringComparison.OrdinalIgnoreCase))
+        {
+            return (true, null, "'null'");
+        }
+
+        var value = literal.ParseLiteralValue();
+
+        return (true, null, CreateParameter(value));
+    }
+
+    private static bool LooksLikeWktLiteral(string s)
+    {
+        var t = UnwrapQuotes(s).TrimStart();
+
+        return t.StartsWith("POINT", StringComparison.OrdinalIgnoreCase)
+               || t.StartsWith("LINESTRING", StringComparison.OrdinalIgnoreCase)
+               || t.StartsWith("POLYGON", StringComparison.OrdinalIgnoreCase)
+               || t.StartsWith("MULTI", StringComparison.OrdinalIgnoreCase)
+               || t.StartsWith("GEOMETRYCOLLECTION", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string UnwrapQuotes(string s)
+    {
+        s = s.Trim();
+
+        return (s.Length >= 2 && ((s[0] == '\'' && s[^1] == '\'') || (s[0] == '\"' && s[^1] == '\"')))
+            ? s.Substring(1, s.Length - 2)
+            : s;
+    }
+
+    private object ExtractParameterValue(string? sqlQuery)
+    {
+        if (string.IsNullOrEmpty(sqlQuery))
+        {
+            throw new ArgumentNullException(nameof(sqlQuery));
+        }
+
+        if (sqlQuery[0] == parameterPrefix && _parameters.TryGetValue(sqlQuery, out var value))
+        {
+            return value;
+        }
+
+        if (double.TryParse(sqlQuery, out var d))
+        {
+            return d;
+        }
+
+        return UnwrapQuotes(sqlQuery);
+    }
+
+    /// <summary>
+    /// Convert distance (degrees) to meters if needed
+    /// </summary>
+    /// <param name="threshold"></param>
+    /// <param name="srid"></param>
+    /// <returns></returns>
+    private static object ConvertDistanceToMetersIfNeeded(object threshold, int srid)
+    {
+        const double metersPerDegree = 111320.0;
+
+        if (srid is not (28992 or 25831 or 3035 or 27700))
+        {
+            return threshold;
+        }
+
+        if (double.TryParse(threshold.ToString(), out var parsed))
+        {
+            return parsed / metersPerDegree;
+        }
+
+        return threshold;
+    }
+}

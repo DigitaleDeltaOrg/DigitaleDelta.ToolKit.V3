@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>14</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Dapper" Version="2.1.66" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="2.3.9" />
+      <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.6" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.2" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.2" />
+      <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="10.0.2" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DigitaleDelta.DbRowMaterializer\DigitaleDelta.DbRowMaterializer.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.ODataTranslator\DigitaleDelta.ODataTranslator.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.ODataWriter\DigitaleDelta.ODataWriter.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.RequestHelpers\DigitaleDelta.RequestHelpers.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.SkipToken\DigitaleDelta.SkipToken.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="LICENSE">
+        <Pack>true</Pack>
+        <PackagePath></PackagePath>
+      </None>
+    </ItemGroup>
+
+</Project>

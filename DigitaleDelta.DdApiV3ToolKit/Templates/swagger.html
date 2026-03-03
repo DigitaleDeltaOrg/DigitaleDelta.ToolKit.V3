@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - Swagger UI</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
+</head>
+<body>
+<div id="swagger-ui"></div>
+<script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js" crossorigin="anonymous"></script>
+<script>
+    window.onload = function () {
+        const ui = SwaggerUIBundle({
+            url: '/v3/openapi.json',
+            dom_id: '#swagger-ui',
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset
+            ],
+            layout: "StandaloneLayout",
+            deepLinking: true,
+            displayOperationId: false,
+            defaultModelsExpandDepth: 1,
+            defaultModelExpandDepth: 1,
+            displayRequestDuration: true,
+            filter: true,
+            showExtensions: true,
+            showCommonExtensions: true
+        });
+
+        // Voeg logo toe aan de header na het laden
+        setTimeout(() => {
+            const topbar = document.querySelector('.topbar-wrapper');
+            if (topbar) {
+                const link = topbar.querySelector('a');
+                if (link) {
+                    link.innerHTML = '<img src="/v3/DigitaleDelta.svg" alt="API Logo" style="max-height: 100px; margin: 10px;">';
+                }
+            }
+        }, 100);
+
+        window.ui = ui;
+    }
+</script>
+<style>
+    .topbar {
+        background-color: #ffffff;
+        border-bottom: 1px solid #e8e8e8;
+    }
+</style>
+</body>
+</html>

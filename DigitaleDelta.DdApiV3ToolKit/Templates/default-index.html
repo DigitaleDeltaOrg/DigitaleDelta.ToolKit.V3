@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digitale Delta API</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --header-border: #1b2240;
+            --card-bg: #f9f9f9;
+            --card-border: #dddddd;
+            --card-hover-shadow: rgba(0,0,0,0.1);
+            --accent-color: #1b2240;
+            --footer-color: #666666;
+            --toggle-bg: #dddddd;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --header-border: #4a7ba7;
+            --card-bg: #2a2a2a;
+            --card-border: #444444;
+            --card-hover-shadow: rgba(255,255,255,0.1);
+            --accent-color: #6fa8dc;
+            --footer-color: #aaaaaa;
+            --toggle-bg: #444444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            border-bottom: 2px solid var(--header-border);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .logo { height: 100px; }
+
+        h1 {
+            color: var(--accent-color);
+            margin: 0;
+        }
+
+        h2 {
+            color: var(--accent-color);
+        }
+
+        .version-card {
+            border: 1px solid var(--card-border);
+            padding: 1.5rem;
+            border-radius: 8px;
+            background: var(--card-bg);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .version-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px var(--card-hover-shadow);
+            border-color: var(--accent-color);
+        }
+
+        .version-card h2 {
+            margin-top: 0;
+            color: var(--accent-color);
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: var(--accent-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            font-size: 0.9rem;
+            color: var(--footer-color);
+            text-align: center;
+        }
+
+        .footer a {
+            color: var(--accent-color);
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--toggle-bg);
+            border: none;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background-color 0.3s;
+        }
+
+        .theme-toggle:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <img src="/wwwroot/DigitaleDelta.svg" alt="Digitale Delta Logo" class="logo">
+    <div>
+        <h1>Digitale Delta API</h1>
+        <p>Ontsluiting van water-gerelateerde metingen en observaties</p>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌓</button>
+</div>
+
+<p>Welkom bij het API-endpoint van deze Digitale Delta implementatie. Selecteer een API-versie om toegang te krijgen tot de documentatie en endpoints.</p>
+
+<h2>Beschikbare API-versies</h2>
+
+<a href="/v3" class="version-card">
+    <h2><span class="version-badge">V3</span> Digitale Delta API V3</h2>
+    <p>De huidige versie van de Digitale Delta API met ondersteuning voor OData-queries op observaties en referenties.</p>
+</a>
+
+<div class="footer">
+    Deze API-implementatie is gemaakt met de <a href="https://digitaledelta.nl">Digitale Delta Toolkit</a>.
+</div>
+
+<script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const currentTheme = html.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+    }
+
+    // Load saved theme on page load
+    (function() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+</script>
+</body>
+</html>

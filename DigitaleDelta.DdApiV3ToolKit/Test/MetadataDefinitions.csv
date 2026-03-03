@@ -1,0 +1,7 @@
+Naam,OData data type,Omschrijving,Vereist,Systeem,Toegevoegd,Definitie
+SetComment,Edm.String,Opmerking bij een meetset,false,AquaDesk,,
+ObservationComment,Edm.String,Opmerking bij een observatie,false,AquaDesk,,
+CollectionComment,Edm.String,Opmerking bij een collectie (monster),false,AquaDesk,,
+ModifiedOn,Edm.DateTimeOffset,Datum creatie/wijziging,true,All,,
+Projects,Edm.Collection(Edm.String),Projecten voor welke deze observatie is uitgevoerd,false,All,,
+OrderNumber,Edm.String,OrderNumber,false,All,,

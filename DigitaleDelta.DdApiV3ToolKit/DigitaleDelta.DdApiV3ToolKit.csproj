@@ -1,0 +1,86 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>14</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CsvHelper" Version="33.1.0" />
+        <PackageReference Include="Markdig" Version="0.44.0" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" />
+        <PackageReference Include="MySql.Data" Version="9.6.0" />
+        <PackageReference Include="Npgsql" Version="10.0.1" />
+        <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.7.0" />
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.2" />
+        <PackageReference Include="Serilog" Version="4.3.0" />
+        <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+        <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
+        <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
+        <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+        <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+        <PackageReference Include="Serilog.Sinks.EventLog" Version="4.0.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+        <PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="5.0.0" />
+        <PackageReference Include="SwashBuckle.AspNetCore.MicrosoftExtensions" Version="0.5.0" />
+        <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="wwwroot\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Move to Nuget package later -->
+      <ProjectReference Include="..\DigitaleDelta.Authentication\DigitaleDelta.Authentication.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.Contracts\DigitaleDelta.Contracts.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.CsdlParser\DigitaleDelta.CsdlParser.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.DbRowMaterializer\DigitaleDelta.DbRowMaterializer.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.DdApiV3ToolKit.ExamplePlugin\DigitaleDelta.DdApiV3ToolKit.ExamplePlugin.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.ErrorHandling\DigitaleDelta.ErrorHandling.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.ODataTranslator\DigitaleDelta.ODataTranslator.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.QueryService\DigitaleDelta.QueryService.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="openapi.yaml">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </Content>
+      <Content Update="redoc.html">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </Content>
+      <Content Update="swagger.html">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </Content>
+        <Content Update="csdl.xml">
+            <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
+        <Content Update="DigitaleDelta3.svg">
+            <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="LICENSE">
+        <Pack>true</Pack>
+        <PackagePath></PackagePath>
+      </None>
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>14</LangVersion>
+        <Version>1.0.1</Version>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <None Update="LICENSE">
+        <Pack>true</Pack>
+        <PackagePath></PackagePath>
+      </None>
+      <None Update="README.md">
+        <Pack>true</Pack>
+        <PackagePath>\</PackagePath>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.9" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DigitaleDelta.Authentication\DigitaleDelta.Authentication.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.Contracts\DigitaleDelta.Contracts.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.ErrorHandling\DigitaleDelta.ErrorHandling.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.ODataTranslator\DigitaleDelta.ODataTranslator.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.SkipToken\DigitaleDelta.SkipToken.csproj" />
+    </ItemGroup>
+
+</Project>

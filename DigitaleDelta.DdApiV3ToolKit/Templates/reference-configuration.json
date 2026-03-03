@@ -1,0 +1,200 @@
+{
+  "ReferenceConfiguration": {
+    "DataQueryFile": "ConfigurationFiles\\reference-data.sql",
+    "CountQueryFile": "ConfigurationFiles\\reference-count.sql",
+    "RequireAuthentication": false,
+    "MaxPageSize": 10000,
+    "DefaultPageSize": 1000,
+    "IdField": "internal_id",
+    "PropertyMapping": [
+      {
+        "ODataPropertyName": "Id",
+        "Query": "id",
+        "EdmType": "Edm.String",
+        "ColumnName": "id"
+      },
+      {
+        "ODataPropertyName": "Type",
+        "Query": "type",
+        "EdmType": "Edm.String",
+        "ColumnName": "type"
+      },
+      {
+        "ODataPropertyName": "Code",
+        "Query": "Code",
+        "EdmType": "Edm.String",
+        "ColumnName": "code"
+      },
+      {
+        "ODataPropertyName": "Name",
+        "Query": "Name",
+        "EdmType": "Edm.String",
+        "ColumnName": "name"
+      },
+      {
+        "ODataPropertyName": "Organisation",
+        "Query": "organisation",
+        "EdmType": "Edm.String",
+        "ColumnName": "organisation"
+      },
+      {
+        "ODataPropertyName": "Geography",
+        "Query": "Geography",
+        "EdmType": "Edm.Geography",
+        "ColumnName": "geography"
+      }
+    ],
+    "FunctionMapping": [
+      {
+        "ODataFunctionName": "contains",
+        "SqlFunctionFormat": "{0} LIKE {1} ESCAPE '\\'",
+        "ExpectedArgumentTypes": ["string", "string"],
+        "WildCardPosition": "LeftAndRight",
+        "WildCardSymbol": "%",
+        "ReturnType": ""
+      },
+      {
+        "ODataFunctionName": "startswith",
+        "SqlFunctionFormat": "{0} LIKE {1} ESCAPE '\\'",
+        "ExpectedArgumentTypes": ["string", "string"],
+        "WildCardPosition": "Right",
+        "WildCardSymbol": "%",
+        "ReturnType": ""
+      },
+      {
+        "ODataFunctionName": "endswith",
+        "SqlFunctionFormat": "{0} LIKE {1} ESCAPE '\\'",
+        "ExpectedArgumentTypes": ["string", "string"],
+        "WildCardPosition": "Left",
+        "WildCardSymbol": "%",
+        "ReturnType": ""
+      },
+      {
+        "ODataFunctionName": "now",
+        "ExpectedArgumentTypes": [],
+        "ReturnType": "Edm.DateTimeOffset",
+        "SqlFunctionFormat": "NOW()"
+      },
+      {
+        "ODataFunctionName": "tolower",
+        "ExpectedArgumentTypes": ["string"],
+        "ReturnType": "Edm.String",
+        "SqlFunctionFormat": "LOWER({0})"
+      },
+      {
+        "ODataFunctionName": "toupper",
+        "ExpectedArgumentTypes": ["string"],
+        "ReturnType": "Edm.String",
+        "SqlFunctionFormat": "UPPER({0})"
+      },
+      {
+        "ODataFunctionName": "length",
+        "ExpectedArgumentTypes": ["string"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "LENGTH({0})"
+      },
+      {
+        "ODataFunctionName": "index",
+        "ExpectedArgumentTypes": ["string", "string"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "POSITION({1} IN {0}) - 1"
+      },
+      {
+        "ODataFunctionName": "substring",
+        "ExpectedArgumentTypes": ["string", "integer", "integer"],
+        "ReturnType": "Edm.String",
+        "SqlFunctionFormat": "SUBSTRING({0}, {1} + 1, {2})"
+      },
+      {
+        "ODataFunctionName": "trim",
+        "ExpectedArgumentTypes": ["string"],
+        "ReturnType": "Edm.String",
+        "SqlFunctionFormat": "TRIM({0})"
+      },
+      {
+        "ODataFunctionName": "year",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "EXTRACT(YEAR FROM {0})"
+      },
+      {
+        "ODataFunctionName": "month",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "EXTRACT(MONTH FROM {0})"
+      },
+      {
+        "ODataFunctionName": "day",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "EXTRACT(DAY FROM {0})"
+      },
+      {
+        "ODataFunctionName": "hour",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "EXTRACT(HOUR FROM {0})"
+      },
+      {
+        "ODataFunctionName": "minute",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "EXTRACT(MINUTE FROM {0})"
+      },
+      {
+        "ODataFunctionName": "second",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "EXTRACT(SECOND FROM {0})"
+      },
+      {
+        "ODataFunctionName": "date",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.Date",
+        "SqlFunctionFormat": "CAST({0} AS DATE)"
+      },
+      {
+        "ODataFunctionName": "time",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.TimeOfDay",
+        "SqlFunctionFormat": "CAST({0} AS TIME)"
+      },
+      {
+        "ODataFunctionName": "floor",
+        "ExpectedArgumentTypes": ["decimal"],
+        "ReturnType": "Edm.Decimal",
+        "SqlFunctionFormat": "FLOOR({0})"
+      },
+      {
+        "ODataFunctionName": "ceil",
+        "ExpectedArgumentTypes": ["decimal"],
+        "ReturnType": "Edm.Decimal",
+        "SqlFunctionFormat": "CEILING({0})"
+      },
+      {
+        "ODataFunctionName": "round",
+        "ExpectedArgumentTypes": ["decimal"],
+        "ReturnType": "Edm.Decimal",
+        "SqlFunctionFormat": "ROUND({0}, 0)"
+      },
+      {
+        "ODataFunctionName": "abs",
+        "ExpectedArgumentTypes": ["decimal"],
+        "ReturnType": "Edm.Decimal",
+        "SqlFunctionFormat": "ABS({0})"
+      },
+      {
+        "ODataFunctionName": "distance",
+        "SqlFunctionFormat": "ST_Distance(ST_Transform(geography::geometry, @srid), ST_GeomFromText({0}, 4258))",
+        "ExpectedArgumentTypes": ["string"],
+        "ReturnType": "Edm.Decimal"
+      },
+      {
+        "ODataFunctionName": "intersects",
+        "SqlFunctionFormat": "ST_Intersects(ST_Transform(geography::geometry, @srid), ST_GeomFromText({0}, 4258))",
+        "ExpectedArgumentTypes": ["string"],
+        "ReturnType": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,310 @@
+{
+  "ObservationConfiguration": {
+    "DataQueryFile": "ConfigurationFiles\\observation-data.sql",
+    "CountQueryFile": "ConfigurationFiles\\observation-count.sql",
+    "RequireAuthentication": true,
+    "MaxPageSize": 10000,
+    "DefaultPageSize": 1000,
+    "IdField": "internal_id",
+    "PropertyMapping": [
+      {
+        "ODataPropertyName": "Id",
+        "Query": "id",
+        "EdmType": "Edm.String",
+        "ColumnName": "id"
+      },
+      {
+        "ODataPropertyName": "Type",
+        "Query": "type",
+        "EdmType": "Edm.String",
+        "ColumnName": "type"
+      },
+      {
+        "ODataPropertyName": "ValidTime/BeginPosition",
+        "Query": "valid_time_start",
+        "EdmType": "Edm.DateTimeOffset",
+        "ColumnName": "valid_time_start"
+      },
+      {
+        "ODataPropertyName": "PhenomenonTime/BeginPosition",
+        "Query": "phenomenon_time_start",
+        "EdmType": "Edm.DateTimeOffset",
+        "ColumnName": "phenomenon_time_start"
+      },
+      {
+        "ODataPropertyName": "PhenomenonTime/EndPosition",
+        "Query": "phenomenon_time_end",
+        "EdmType": "Edm.DateTimeOffset",
+        "ColumnName": "phenomenon_time_end"
+      },
+      {
+        "ODataPropertyName": "ResultTime",
+        "Query": "result_time",
+        "EdmType": "Edm.DateTimeOffset",
+        "ColumnName": "result_time"
+      },
+      {
+        "ODataPropertyName": "Foi/Id",
+        "Query": "foi->>'Id'",
+        "EdmType": "Edm.String",
+        "ColumnName": "foi_id"
+      },
+      {
+        "ODataPropertyName": "Foi/Code",
+        "Query": "foi->>'Code'",
+        "EdmType": "Edm.String",
+        "ColumnName": "foi_code"
+      },
+      {
+        "ODataPropertyName": "Foi/Name",
+        "Query": "foi->>'Description'",
+        "EdmType": "Edm.String",
+        "ColumnName": "foi_description"
+      },
+      {
+        "ODataPropertyName": "Foi/Geography",
+        "Query": "geography",
+        "EdmType": "Edm.Geography",
+        "ColumnName": "geography"
+      },
+      {
+        "ODataPropertyName": "Parameter/Quantity",
+        "Query": "parameter->'Quantity'",
+        "EdmType": "Edm.String",
+        "ColumnName": "parameter_quantity"
+      },
+      {
+        "ODataPropertyName": "Parameter/Organisation",
+        "Query": "organisation",
+        "EdmType": "Edm.String",
+        "ColumnName": "organisation"
+      },
+      {
+        "ODataPropertyName": "Parameter/OrganisationNamespace",
+        "Query": "parameter->'OrganisationNamespace'",
+        "EdmType": "Edm.String",
+        "ColumnName": "parameter_organisation_namespace"
+      },
+      {
+        "ODataPropertyName": "Parameter/Parameter",
+        "Query": "parameter->'Parameter'",
+        "EdmType": "Edm.String",
+        "ColumnName": "parameter_parameter"
+      },
+      {
+        "ODataPropertyName": "Parameter/Compartment",
+        "Query": "parameter->'Compartment'",
+        "EdmType": "Edm.String",
+        "ColumnName": "parameter_compartment"
+      },
+      {
+        "ODataPropertyName": "Parameter/Purpose",
+        "Query": "parameter->'Purpose'",
+        "EdmType": "Edm.String",
+        "ColumnName": "parameter_purpose"
+      },
+      {
+        "ODataPropertyName": "Metadata/ModifiedOn",
+        "Query": "modified_on",
+        "EdmType": "Edm.DateTimeOffset",
+        "ColumnName": "modified_on"
+      },
+      {
+        "ODataPropertyName": "Result/Id",
+        "Query": "result->>'id'",
+        "EdmType": "Edm.String",
+        "ColumnName": "result_id"
+      },
+      {
+        "ODataPropertyName": "Result/Count",
+        "Query": "(result->>'Count')::numeric",
+        "EdmType": "Edm.Decimal",
+        "ColumnName": "result_count"
+      },
+      {
+        "ODataPropertyName": "Result/Measure/Value",
+        "Query": "(result->>'Measure.Value')::numeric",
+        "EdmType": "Edm.Decimal",
+        "ColumnName": "result_measure_value"
+      },
+      {
+        "ODataPropertyName": "Result/Measure/Uom",
+        "Query": "result->>'Measure.UoM'",
+        "EdmType": "Edm.String",
+        "ColumnName": "result_measure_uom"
+      },
+      {
+        "ODataPropertyName": "Result/Vocab/Vocabulary",
+        "Query": "result->>'Vocab.Vocabulary'",
+        "EdmType": "Edm.String",
+        "ColumnName": "result_vocab_vocabulary"
+      },
+      {
+        "ODataPropertyName": "Result/Vocab/Verb",
+        "Query": "result->>'Vocab.Verb'",
+        "EdmType": "Edm.String",
+        "ColumnName": "result_vocab_verb"
+      },
+      {
+        "ODataPropertyName": "InternalId",
+        "Query": "internal_id",
+        "EdmType": "Edm.Int32",
+        "ColumnName": "internal_id",
+        "ExcludeFromResponse": true,
+        "DisallowInFilter": true
+      }
+    ],
+    "FunctionMapping": [
+      {
+        "ODataFunctionName": "contains",
+        "SqlFunctionFormat": "{0} LIKE {1} ESCAPE '\\'",
+        "ExpectedArgumentTypes": ["string", "string"],
+        "WildCardPosition": "LeftAndRight",
+        "WildCardSymbol": "%",
+        "ReturnType": ""
+      },
+      {
+        "ODataFunctionName": "startswith",
+        "SqlFunctionFormat": "{0} LIKE {1} ESCAPE '\\'",
+        "ExpectedArgumentTypes": ["string", "string"],
+        "WildCardPosition": "Right",
+        "WildCardSymbol": "%",
+        "ReturnType": ""
+      },
+      {
+        "ODataFunctionName": "endswith",
+        "SqlFunctionFormat": "{0} LIKE {1} ESCAPE '\\'",
+        "ExpectedArgumentTypes": ["string", "string"],
+        "WildCardPosition": "Left",
+        "WildCardSymbol": "%",
+        "ReturnType": ""
+      },
+      {
+        "ODataFunctionName": "now",
+        "ExpectedArgumentTypes": [],
+        "ReturnType": "Edm.DateTimeOffset",
+        "SqlFunctionFormat": "NOW()"
+      },
+      {
+        "ODataFunctionName": "tolower",
+        "ExpectedArgumentTypes": ["string"],
+        "ReturnType": "Edm.String",
+        "SqlFunctionFormat": "LOWER({0})"
+      },
+      {
+        "ODataFunctionName": "toupper",
+        "ExpectedArgumentTypes": ["string"],
+        "ReturnType": "Edm.String",
+        "SqlFunctionFormat": "UPPER({0})"
+      },
+      {
+        "ODataFunctionName": "length",
+        "ExpectedArgumentTypes": ["string"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "LENGTH({0})"
+      },
+      {
+        "ODataFunctionName": "index",
+        "ExpectedArgumentTypes": ["string", "string"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "POSITION({1} IN {0}) - 1"
+      },
+      {
+        "ODataFunctionName": "substring",
+        "ExpectedArgumentTypes": ["string", "integer", "integer"],
+        "ReturnType": "Edm.String",
+        "SqlFunctionFormat": "SUBSTRING({0}, {1} + 1, {2})"
+      },
+      {
+        "ODataFunctionName": "trim",
+        "ExpectedArgumentTypes": ["string"],
+        "ReturnType": "Edm.String",
+        "SqlFunctionFormat": "TRIM({0})"
+      },
+      {
+        "ODataFunctionName": "year",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "EXTRACT(YEAR FROM {0})"
+      },
+      {
+        "ODataFunctionName": "month",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "EXTRACT(MONTH FROM {0})"
+      },
+      {
+        "ODataFunctionName": "day",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "EXTRACT(DAY FROM {0})"
+      },
+      {
+        "ODataFunctionName": "hour",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "EXTRACT(HOUR FROM {0})"
+      },
+      {
+        "ODataFunctionName": "minute",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "EXTRACT(MINUTE FROM {0})"
+      },
+      {
+        "ODataFunctionName": "second",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.Int32",
+        "SqlFunctionFormat": "EXTRACT(SECOND FROM {0})"
+      },
+      {
+        "ODataFunctionName": "date",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.Date",
+        "SqlFunctionFormat": "CAST({0} AS DATE)"
+      },
+      {
+        "ODataFunctionName": "time",
+        "ExpectedArgumentTypes": ["datetime"],
+        "ReturnType": "Edm.TimeOfDay",
+        "SqlFunctionFormat": "CAST({0} AS TIME)"
+      },
+      {
+        "ODataFunctionName": "floor",
+        "ExpectedArgumentTypes": ["decimal"],
+        "ReturnType": "Edm.Decimal",
+        "SqlFunctionFormat": "FLOOR({0})"
+      },
+      {
+        "ODataFunctionName": "ceil",
+        "ExpectedArgumentTypes": ["decimal"],
+        "ReturnType": "Edm.Decimal",
+        "SqlFunctionFormat": "CEILING({0})"
+      },
+      {
+        "ODataFunctionName": "round",
+        "ExpectedArgumentTypes": ["decimal"],
+        "ReturnType": "Edm.Decimal",
+        "SqlFunctionFormat": "ROUND({0}, 0)"
+      },
+      {
+        "ODataFunctionName": "abs",
+        "ExpectedArgumentTypes": ["decimal"],
+        "ReturnType": "Edm.Decimal",
+        "SqlFunctionFormat": "ABS({0})"
+      },
+      {
+        "ODataFunctionName": "distance",
+        "SqlFunctionFormat": "ST_Distance(geography, ST_GeomFromText({0}, 4326))",
+        "ExpectedArgumentTypes": ["string"],
+        "ReturnType": "Edm.Decimal"
+      },
+      {
+        "ODataFunctionName": "intersects",
+        "SqlFunctionFormat": "ST_Intersects(geography, ST_GeomFromText({0}, 4326))",
+        "ExpectedArgumentTypes": ["string"],
+        "ReturnType": "Edm.Boolean"
+      }
+    ]
+  }
+}
