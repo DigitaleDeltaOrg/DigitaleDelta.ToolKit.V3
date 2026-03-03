@@ -27,7 +27,6 @@ Daaromheen staan losse libraries voor specifieke verantwoordelijkheden, zoals:
 - `DigitaleDelta.SkipToken`
 - `DigitaleDelta.ErrorHandling`
 - `DigitaleDelta.RequestHelpers`
-- `DigitaleDelta.Workflow`
 
 Elke module heeft een duidelijke taak en kan onafhankelijk worden getest en toegepast.
 
