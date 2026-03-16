@@ -29,5 +29,5 @@ select
     result->'Vocab'->>'Verb' as result_vocab_verb,
     result->>'Count' as result_count
 from observation
-where (@access AND @where AND @skiptoken)
+where (@access AND (@where) AND @skiptoken)
 limit @limit

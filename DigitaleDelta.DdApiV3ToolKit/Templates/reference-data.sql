@@ -33,5 +33,5 @@ select
     details->>'ReportsToMeasurementObject' as reports_to_measurement_object,
     details->>'IsReportingMeasurementObject' as is_reporting_measurement_object
 from reference
-where (@access AND @where AND @skiptoken)
+where (@access AND (@where) AND @skiptoken)
 limit @limit

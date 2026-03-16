@@ -1,0 +1,23 @@
+﻿# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# Kopieer alles zodat project references binnen de solution werken
+COPY . .
+RUN dotnet restore "DigitaleDelta.DdApiV3ToolKit/DigitaleDelta.DdApiV3ToolKit.csproj"
+RUN dotnet publish "DigitaleDelta.DdApiV3ToolKit/DigitaleDelta.DdApiV3ToolKit.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Runtime stage (Linux)
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+
+# Publish output
+COPY --from=build /app/publish ./
+
+# Zorg dat verplichte configmap bestaat (ReadConfigurationFiles verwacht dit pad)
+COPY --from=build /src/DigitaleDelta.DdApiV3ToolKit/ConfigurationFiles ./ConfigurationFiles
+
+ENTRYPOINT ["dotnet", "DigitaleDelta.DdApiV3ToolKit.dll"]
