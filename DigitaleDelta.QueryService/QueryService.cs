@@ -27,6 +27,7 @@ public class QueryService
     private readonly IMemoryCache _cache;
     private readonly IRequestLogger _requestLogger;
     private readonly IAuthorization _authorizationService;
+    private readonly HashSet<string> _excludedProperties;
 
     /// <summary>
     /// Generic query service.
@@ -49,6 +50,10 @@ public class QueryService
         _cache = cache;
         _requestLogger = requestLogger;
         _authorizationService = authorizationService;
+        _excludedProperties = _parameters.PropertyMap
+            .Where(kvp => kvp.Value.ExcludeFromResponse)
+            .Select(kvp => kvp.Value.ODataPropertyName)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -93,7 +98,7 @@ public class QueryService
             throw new ODataValidationException($"Error: {error}");
         }
 
-        _requestLogger.LogResponse(httpContext.TraceIdentifier, succeeded: true, DateTimeOffset.Now, DateTime.UtcNow - start, queryResult.Data?.Count());
+        _requestLogger.LogResponse(httpContext.TraceIdentifier, succeeded: true, DateTimeOffset.Now, DateTime.UtcNow - start, queryResult.Data?.Count);
 
         return CreateResponse(httpContext, queryResult, oDataQueryOptions);
     }
@@ -109,19 +114,10 @@ public class QueryService
     {
         context.Request.SetPreferenceAppliedResponseHeader();
 
-        // Filter out properties marked as ExcludeFromResponse
-        var excludedProperties = _parameters.PropertyMap
-            .Where(kvp => kvp.Value.ExcludeFromResponse)
-            .Select(kvp => kvp.Value.ODataPropertyName)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var data = queryResult.Data ?? [];
+        RemoveExcludedProperties(data);
 
-        var filteredData = (queryResult.Data ?? [])
-            .Select(entity => entity
-                .Where(kvp => !excludedProperties.Contains(kvp.Key))
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value))
-            .ToList();
-
-        var response = filteredData.CreateODataResponse()
+        var response = data.CreateODataResponse()
             .WithBaseUrl(context.Request.GetBaseUrl())
             .IncludeCount(oDataQueryOptions.Count ?? false)
             .WithEntitySet(_parameters.EntitySetName)
@@ -185,17 +181,24 @@ public class QueryService
         try
         {
             _logger.LogInformation("RequestId: {RequestId} - Executing SQL query: {SqlQuery}", requestId, dataSqlStatement);
+
             await using var reader = await connection.ExecuteReaderAsync(new CommandDefinition(dataSqlStatement, dataParams, commandTimeout: 120)).ConfigureAwait(false);
-            var orderedPropertyMaps = DbRowMaterializer.DbRowMaterializer.CreateReverseOrderedMap(reader, _parameters).ToDictionary(a => a.ODataPropertyName);
-            var data = await DbRowMaterializer.DbRowMaterializer.MaterializeToListAsync(reader, orderedPropertyMaps, queryParameters.OmitNulls, queryParameters.Top + 1, _logger, queryParameters.CrsId).ConfigureAwait(false);
-            var hasMore = data.Count > queryParameters.Top;
-            var dataToReturn = hasMore ? data.Take(queryParameters.Top).ToList() : data;
             var idODataKey = _parameters.ReversePropertyMap.TryGetValue(_parameters.IdField, out var idKey) ? idKey.ODataPropertyName : "Id";
-            var lastIdForPage = dataToReturn.LastOrDefault()?.TryGetValue(idODataKey, out var idVal) == true ? idVal?.ToString() : null;
+            var materializerExcludedProperties = GetMaterializerExcludedProperties(idODataKey);
+            var orderedPropertyMaps = DbRowMaterializer.DbRowMaterializer.CreateReverseOrderedMap(reader, _parameters).ToDictionary(a => a.ODataPropertyName);
+            var data = await DbRowMaterializer.DbRowMaterializer.MaterializeToListAsync(reader, orderedPropertyMaps, queryParameters.OmitNulls, queryParameters.Top + 1, _logger, queryParameters.CrsId, excludeProperties: materializerExcludedProperties).ConfigureAwait(false);
+            var hasMore = data.Count > queryParameters.Top;
+
+            if (hasMore)
+            {
+                data.RemoveAt(data.Count - 1);
+            }
+
+            var lastIdForPage = data.LastOrDefault()?.TryGetValue(idODataKey, out var idVal) == true ? idVal?.ToString() : null;
 
             skipTokenHelper.TryConstructFromUrl(queryParameters.Url ?? string.Empty, lastIdForPage, out var newSkipToken);
 
-            return new QueryResult { Data = dataToReturn, SkipToken = newSkipToken, TotalCount = totalCount, MoreData = hasMore };
+            return new QueryResult { Data = data, SkipToken = newSkipToken, TotalCount = totalCount, MoreData = hasMore };
         }
         catch (DbException ex)
         {
@@ -216,6 +219,57 @@ public class QueryService
 
             // Return generic error to user, don't expose internal details
             return new QueryResult { HasError = true, ErrorDetails = "An unexpected error occurred while processing the request." };
+        }
+    }
+
+    /// <summary>
+    /// Retrieves a set of properties to be excluded during materialization,
+    /// optionally excluding a specified key property.
+    /// </summary>
+    /// <param name="idODataKey">The OData key property to potentially exclude from the exclusion set.</param>
+    /// <returns>
+    /// A read-only set of properties to be excluded from materialization, or null if no exclusions apply.
+    /// </returns>
+    private HashSet<string>? GetMaterializerExcludedProperties(string idODataKey)
+    {
+        if (_excludedProperties.Count == 0)
+        {
+            return null;
+        }
+
+        if (!_excludedProperties.Contains(idODataKey))
+        {
+            return _excludedProperties;
+        }
+
+        if (_excludedProperties.Count == 1)
+        {
+            return null;
+        }
+
+        var materializerExcludedProperties = new HashSet<string>(_excludedProperties, StringComparer.OrdinalIgnoreCase);
+        materializerExcludedProperties.Remove(idODataKey);
+
+        return materializerExcludedProperties;
+    }
+
+    /// <summary>
+    /// Removes properties from the provided data collection that are specified in the excluded properties list.
+    /// </summary>
+    /// <param name="data">The collection of entities where excluded properties should be removed.</param>
+    private void RemoveExcludedProperties(List<Dictionary<string, object?>> data)
+    {
+        if (_excludedProperties.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var entity in data)
+        {
+            foreach (var property in _excludedProperties)
+            {
+                entity.Remove(property);
+            }
         }
     }
 

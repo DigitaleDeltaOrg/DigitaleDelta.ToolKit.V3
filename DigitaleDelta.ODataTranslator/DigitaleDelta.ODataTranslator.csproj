@@ -30,8 +30,8 @@
 
     <ItemGroup>
         <!-- This is the key part for monorepo support -->
-        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.2" />
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.102" PrivateAssets="All" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.7" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.203" PrivateAssets="All" />
     </ItemGroup>
     
     <ItemGroup>

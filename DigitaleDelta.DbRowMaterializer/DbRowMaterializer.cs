@@ -36,10 +36,11 @@ public static class DbRowMaterializer
     /// <param name="reader">The data reader containing the rows to read and map.</param>
     /// <param name="fieldMaps">A mapping of OData property names to SQL column specifications.</param>
     /// <param name="suppressNulls">Determines whether null values should be excluded from the resulting dictionaries.</param>
-    /// <param name="lineCount">The maximum number of rows to materialise. If zero or negative, all rows are processed.</param>
+    /// <param name="lineCount">The maximum number of rows to materialise. Must be greater than zero.</param>
     /// <param name="logger">The logger for capturing logs during the materialisation process.</param>
     /// <param name="targetSrid">The optional Spatial Reference Identifier (SRID) for any geometry or geography data in the output.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <param name="excludeProperties">An optional set of OData property names to be excluded from the mapping process.</param>
     /// <returns>Returns a task that represents the asynchronous operation. The task result contains a list of dictionaries, each representing a mapped row.</returns>
     public static async Task<List<Dictionary<string, object?>>> MaterializeToListAsync(
         DbDataReader reader,
@@ -48,16 +49,18 @@ public static class DbRowMaterializer
         int lineCount,
         ILogger logger,
         int? targetSrid = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IReadOnlySet<string>? excludeProperties = null)
     {
         ArgumentNullException.ThrowIfNull(reader);
         ArgumentNullException.ThrowIfNull(fieldMaps);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(lineCount, 0);
 
         var ordinals = BuildNameMapper(reader);
         var tempPaths = new List<string>(reader.FieldCount);
         var tempSpecs = new List<ColSpec>(reader.FieldCount);
 
-        ExtractColumnSpecifications(fieldMaps, ordinals, tempPaths, tempSpecs, logger);
+        ExtractColumnSpecifications(fieldMaps, ordinals, tempPaths, tempSpecs, logger, excludeProperties);
 
         var paths = tempPaths.ToArray();
         var specs = tempSpecs.ToArray();
@@ -76,7 +79,7 @@ public static class DbRowMaterializer
             }
         }
 
-        var result = new List<Dictionary<string, object?>>(1024);
+        var result = new List<Dictionary<string, object?>>(lineCount);
         var rowCount = 0;
 
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
@@ -107,10 +110,20 @@ public static class DbRowMaterializer
         return result;
     }
 
+    /// <summary>
+    /// Reads a value from the specified column in the <see cref="DbDataReader"/> efficiently, applying transformations based on the column type and target field type.
+    /// </summary>
+    /// <param name="logger">The logger used for capturing diagnostic information during value retrieval.</param>
+    /// <param name="r">The data reader instance from which the value is read.</param>
+    /// <param name="spec">The column specification that includes the ordinal position and type of the column.</param>
+    /// <param name="fieldType">The expected data type of the target field.</param>
+    /// <param name="targetSrid">The optional Spatial Reference Identifier (SRID) for interpreting geography data, if applicable.</param>
+    /// <returns>Returns the value retrieved from the specified column. The type and format of the returned value depend on the column type and transformations applied.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static object? ReadValueFast(ILogger logger, DbDataReader r, ColSpec spec, Type fieldType, int? targetSrid)
     {
         var ord = spec.Ordinal;
+
         if (r.IsDBNull(ord))
         {
             return null;
@@ -191,10 +204,33 @@ public static class DbRowMaterializer
         }
     }
 
-    private static void ExtractColumnSpecifications(Dictionary<string, ODataToSqlMap> fieldMaps, Dictionary<string, int> ordinals, List<string> tempPaths, List<ColSpec> tempSpecs, ILogger logger)
+    /// <summary>
+    /// Extracts column specifications from the provided OData to SQL mappings and populates the specified temporary paths and specifications.
+    /// This method maps OData property names to their respective SQL column ordinals and types, while also applying filtering for excluded properties.
+    /// </summary>
+    /// <param name="fieldMaps">A dictionary of OData property names mapped to SQL column specifications.</param>
+    /// <param name="ordinals">A dictionary mapping SQL column names to their corresponding ordinals in the <see cref="DbDataReader"/>.</param>
+    /// <param name="tempPaths">A list to store the mapped OData property names.</param>
+    /// <param name="tempSpecs">A list to store the column specifications, including ordinals and types.</param>
+    /// <param name="logger">The logger used for logging errors or messages during the extraction process.</param>
+    /// <param name="excludeProperties">An optional set of OData property names to be excluded from the mapping process.</param>
+    private static void ExtractColumnSpecifications(
+        Dictionary<string, ODataToSqlMap> fieldMaps,
+        Dictionary<string, int> ordinals,
+        List<string> tempPaths,
+        List<ColSpec> tempSpecs,
+        ILogger logger,
+        IReadOnlySet<string>? excludeProperties = null)
     {
         foreach (var fm in fieldMaps.Values)
         {
+            var oDataPropertyName = fm.ODataPropertyName.Trim();
+
+            if (excludeProperties?.Contains(oDataPropertyName) == true)
+            {
+                continue;
+            }
+
             var columnName = fm.ColumnName.Trim();
 
             if (!ordinals.TryGetValue(columnName, out var ord))
@@ -206,7 +242,7 @@ public static class DbRowMaterializer
 
             var kind = MapEdmToKind(fm.EdmType);
 
-            tempPaths.Add(fm.ODataPropertyName.Trim());
+            tempPaths.Add(oDataPropertyName);
             tempSpecs.Add(new ColSpec(ord, kind));
         }
     }

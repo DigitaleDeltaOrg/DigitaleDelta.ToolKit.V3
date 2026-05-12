@@ -11,7 +11,7 @@ public class QueryResult
     /// <summary>
     /// Data returned by the query as a collection of dictionaries,
     /// </summary>
-    public IEnumerable<Dictionary<string, object?>>? Data { get; init; }
+    public List<Dictionary<string, object?>>? Data { get; init; }
     /// <summary>
     /// OData skip token for pagination to retrieve the next page of results.
     /// </summary>

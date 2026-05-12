@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Data.Common;
+using System.Net;
 using System.Text.Json.Serialization;
 using DigitaleDelta.Authentication;
 using DigitaleDelta.Contracts.Configuration;
@@ -14,6 +15,7 @@ using Markdig;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -24,6 +26,7 @@ using MySql.Data.MySqlClient;
 using Npgsql;
 using Oracle.ManagedDataAccess.Client;
 using Serilog;
+using IPNetwork = System.Net.IPNetwork;
 
 namespace DigitaleDelta.DdApiV3ToolKit.Configuration;
 
@@ -50,6 +53,9 @@ public static class Configure
         {
             ParameterPrefix = builder.Configuration.GetValue<char?>("ParameterPrefix") ?? '@'
         };
+
+        // Forwarded headers configuration. Use for reverse proxy scenarios.
+        builder.Services.ConfigureForwardedHeaders(builder.Configuration);
 
         // Some parameters will not be picked up with a hot reload, but those will not change often.
         // For query changes, always start the app again instead of relying on hot reload.
@@ -100,6 +106,7 @@ public static class Configure
     /// <returns>The configured WebApplication instance.</returns>
     public static WebApplication ConfigureApplication(this WebApplication application)
     {
+        application.UseForwardedHeaders();
         application.UseCors("Cors");
         application.UseODataErrorHandling(); // Middleware for handling OData errors
         application.UseExceptionHandler();
@@ -358,5 +365,51 @@ public static class Configure
         return File.Exists(file)
             ? File.ReadAllText(file)
             : throw new FileNotFoundException($"Bestand '{file}' niet gevonden.");
+    }
+
+    /// <summary>
+    /// Configures forwarded headers settings for the application, including supported forwarded headers, known proxies,
+    /// and known IP networks, based on the provided configuration. This is typically used in reverse proxy environments.
+    /// </summary>
+    /// <param name="services">The IServiceCollection to which the forwarded headers options will be added.</param>
+    /// <param name="configuration">The IConfiguration instance containing the forwarded headers configuration settings.</param>
+    private static void ConfigureForwardedHeaders(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders =
+                ForwardedHeaders.XForwardedFor |
+                ForwardedHeaders.XForwardedProto |
+                ForwardedHeaders.XForwardedHost;
+
+            var knownProxies = configuration
+                .GetSection("ForwardedHeaders:KnownProxies")
+                .Get<string[]>() ?? [];
+
+            foreach (var proxy in knownProxies)
+            {
+                if (IPAddress.TryParse(proxy, out var ipAddress))
+                {
+                    options.KnownProxies.Add(ipAddress);
+                }
+            }
+
+            var knownNetworks = configuration
+                .GetSection("ForwardedHeaders::KnownIPNetworks")
+                .Get<string[]>() ?? [];
+
+            foreach (var network in knownNetworks)
+            {
+                AddKnownIpNetwork(options, network);
+            }
+        });
+    }
+
+    private static void AddKnownIpNetwork(ForwardedHeadersOptions options, string network)
+    {
+        if (IPNetwork.TryParse(network, out var ipNetwork))
+        {
+            options.KnownIPNetworks.Add(ipNetwork);
+        }
     }
 }
