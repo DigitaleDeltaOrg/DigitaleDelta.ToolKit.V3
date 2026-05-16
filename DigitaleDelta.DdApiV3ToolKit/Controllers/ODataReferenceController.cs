@@ -66,7 +66,7 @@ public class ODataReferenceController : ControllerBase
     /// <returns>An IActionResult containing the OData query result or a BadRequest response on failure.</returns>
     public async Task<IActionResult> Get()
     {
-        var oDataQueryOptions = Request.ToODataQueryOptions(_oDataQueryServiceParameters.PropertyMap, _oDataQueryServiceParameters.FunctionMap, _oDataQueryServiceParameters.DefaultPageSize, _oDataQueryServiceParameters.MaxPageSize);
+        var oDataQueryOptions = Request.ToODataQueryOptions(_oDataQueryServiceParameters.PropertyMap, _oDataQueryServiceParameters.FunctionMap, _oDataQueryServiceParameters.DefaultPageSize, _oDataQueryServiceParameters.MaxPageSize, _oDataQueryServiceParameters.RequireFilter);
         var queryService = new DigitaleDelta.QueryService.QueryService(_oDataQueryServiceParameters, _logger, _memoryCache, _requestLogger, _authorizationService);
         var response = await queryService.ProcessRequestAsync(Request.HttpContext, oDataQueryOptions, _baseParameters.ParameterPrefix).ConfigureAwait(false);
 

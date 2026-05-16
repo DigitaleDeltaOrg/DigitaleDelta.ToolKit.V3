@@ -20,12 +20,12 @@ public static class DigitaleDeltaAuthenticationExtensions
     /// <returns>The updated service collection with the authentication services configured.</returns>
     public static IServiceCollection AddDigitaleDeltaAuthentication(this IServiceCollection services, IConfiguration config)
     {
-        services.Configure<AuthenticationSettings>(config.GetSection("Authentication"));
+        services.Configure<AuthenticationSettings>(config.GetSection("AuthenticationConfiguration"));
         services.AddSingleton<AuthenticationHandlerFactory>();
         services.AddTransient<NoAuthenticationHandler>();
         services.AddTransient<ApiKeyAuthenticationHandler>(_ =>
         {
-            var headerName = config["Authentication:HeaderName"] ?? "X-API-KEY";
+            var headerName = config["AuthenticationConfiguration:ApiKeyHeaderName"] ?? "X-API-KEY";
             return new ApiKeyAuthenticationHandler(headerName);
         });
         services.AddTransient<JwtAuthenticationHandler>(_ =>

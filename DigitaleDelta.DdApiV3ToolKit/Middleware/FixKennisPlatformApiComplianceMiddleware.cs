@@ -17,11 +17,11 @@ public class FixKennisPlatformApiComplianceMiddleware(RequestDelegate next, ICon
     public Task InvokeAsync(HttpContext context)
     {
         // Add lifetime information
-        context.Response.Headers.Append("API-Version", configuration.GetValue<string>("Version"));
-        context.Response.Headers.Append("API-Deprecation-Date", configuration.GetValue<string>("DeprecationDate"));
-        context.Response.Headers.Append("API-End-of-Life-Date", configuration.GetValue<string>("EndOfLifeDate"));
-        context.Response.Headers.Append("API-Next-Release", configuration.GetValue<string>("NextMajorVersion"));
-        context.Response.Headers.Append("API-Additional-Documentation", configuration.GetValue<string>("AdditionalDocumentationUrl"));
+        context.Response.Headers.Append("API-Version", configuration.GetValue<string>("API-Version"));
+        context.Response.Headers.Append("API-Deprecation-Date", configuration.GetValue<string>("API-Deprecation-Date"));
+        context.Response.Headers.Append("API-End-of-Life-Date", configuration.GetValue<string>("API-End-of-Life-Date"));
+        context.Response.Headers.Append("API-Next-Release", configuration.GetValue<string>("API-Next-Release"));
+        context.Response.Headers.Append("API-Additional-Documentation", configuration.GetValue<string>("API-Additional-Documentation"));
 
         // Add security headers (ADR /core/transport/security-headers)
         context.Response.Headers.Append("Cache-Control", "no-store");

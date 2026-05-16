@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2025 - EcoSys
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
@@ -31,14 +32,15 @@ public class AuthenticationMiddleware(RequestDelegate next, AuthenticationHandle
     public async Task InvokeAsync(HttpContext context)
     {
         var handler = factory.Create(_settings.Type);
-        
+
         if (!await handler.TryAuthenticateAsync(context, out var principal).ConfigureAwait(false))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            context.User = principal;
-            
+
             return;
         }
+
+        context.User = principal ?? new ClaimsPrincipal();
 
         await next(context);
     }

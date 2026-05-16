@@ -55,4 +55,10 @@ public record ODataToSqlMap
     /// Useful for internal fields like pagination IDs that are needed for queries but not for clients.
     /// </summary>
     public bool ExcludeFromResponse { get; set; }
+
+    /// <summary>
+    /// Indicates whether the OData property must be included in the filter clause of a query.
+    /// If set to true, the specified property is required in the filtering criteria.
+    /// </summary>
+    public bool RequireInFilter { init; get; } = false;
 }

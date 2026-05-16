@@ -55,15 +55,9 @@ public static class RequestExtensions
             }
         }
 
-        public string GetUrl()
-        {
-            return $"{request.Scheme}://{request.Host}{request.PathBase}{request.Path}{request.QueryString}";
-        }
+        public string GetUrl() => $"{request.Scheme}://{request.Host}{request.PathBase}{request.Path}{request.QueryString}";
 
-        public string GetBaseUrl()
-        {
-            return $"{request.Scheme}://{request.Host}{request.PathBase}{request.Path}";
-        }
+        public string GetBaseUrl() => $"{request.Scheme}://{request.Host}{request.PathBase}{request.Path}";
 
         /// <summary>
         /// Converts the HTTP request query parameters into a structured <see cref="ODataQueryOptions"/> object.
@@ -72,9 +66,10 @@ public static class RequestExtensions
         /// <param name="functionMaps">A collection of OData function mappings for validation purposes.</param>
         /// <param name="defaultTop">The default maximum number of entities to return if $top is not specified.</param>
         /// <param name="maxTop">The maximum allowable value for $top to ensure query safety.</param>
+        /// <param name="requireFilter"></param>
         /// <returns>A populated <see cref="ODataQueryOptions"/> object based on the HTTP request query parameters.</returns>
         /// <exception cref="ODataValidationException">Thrown when query validation fails or contains unsupported parameters.</exception>
-        public ODataQueryOptions ToODataQueryOptions(Dictionary<string, ODataToSqlMap> propertyMaps, Dictionary<string, ODataFunctionMap> functionMaps, int defaultTop, int maxTop)
+        public ODataQueryOptions ToODataQueryOptions(Dictionary<string, ODataToSqlMap> propertyMaps, Dictionary<string, ODataFunctionMap> functionMaps, int defaultTop, int maxTop, bool requireFilter)
         {
             var options = new ODataQueryOptions
             {
@@ -82,6 +77,11 @@ public static class RequestExtensions
             };
 
             request.Query.TryGetValue("$filter", out var filterValue);
+
+            if (requireFilter && filterValue.Count == 0)
+            {
+                throw new ODataValidationException("Service requires $filter", null, "MissingFilter");
+            }
 
             var filterString = filterValue.FirstOrDefault() ?? string.Empty;
 
@@ -91,14 +91,14 @@ public static class RequestExtensions
 
                 if (!ODataFilter.TryParse(wrapped, out var filter, out var error) || filter == null)
                 {
-                    throw new ODataValidationException("Filter error", new Exception(error), "Invalid filter.");
+                    throw new ODataValidationException("Filter error", null, "InvalidFilter");
                 }
 
                 var validator = new ODataFilterValidator(propertyMaps, functionMaps);
 
                 if (!validator.TryValidate(filter.Context, out var errors))
                 {
-                    throw new ODataValidationException("Filter error", new Exception(error), string.Join("; ", errors));
+                    throw new ODataValidationException(string.Join("; ", errors), null, "InvalidFilter");
                 }
 
                 options.Filter = filter.Context;

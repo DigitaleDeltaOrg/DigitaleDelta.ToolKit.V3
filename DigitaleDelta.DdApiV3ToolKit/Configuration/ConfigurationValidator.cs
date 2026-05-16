@@ -56,6 +56,8 @@ public static class ConfigurationValidator
         "Metadata/ModifiedOn"
     ];
 
+    private static readonly HttpClient _client = new();
+
     /// <param name="builder">The host application builder that contains the application's configuration.</param>
     extension(WebApplicationBuilder builder)
     {
@@ -609,12 +611,6 @@ $"""
             {
                 LogError($"Fout in configuratie: ContextDefinition type mismatch voor '{contextName}'. Verwacht: '{item.EdmType}', Gevonden: '{validProperties[contextName]}'.");
             }
-
-            // Apply DisallowInFilter from definition to property map
-            if (validProperties[contextName].DisallowInFilter == true)
-            {
-                item.DisallowInFilter = true;
-            }
         }
     }
 
@@ -637,8 +633,7 @@ $"""
 
         try
         {
-            using var client = new HttpClient();
-            data = client.GetStringAsync(url).GetAwaiter().GetResult();
+            data = _client.GetStringAsync(url).GetAwaiter().GetResult();
         }
         catch(Exception e)
         {
@@ -682,7 +677,7 @@ $"""
         var descriptionIndex = reader.HeaderRecord.IndexOf("Omschrijving");
         var definitionIndex = reader.HeaderRecord.IndexOf("Definitie");
         var systemIndex = reader.HeaderRecord.IndexOf("Systeem");
-        var disallowInFilterIndex = reader.HeaderRecord.IndexOf("DisallowInFilter");
+
         while (reader.Read())
         {
             var name = reader.GetField<string>(nameIndex)?.Trim();
@@ -690,14 +685,13 @@ $"""
             var description = reader.GetField<string>(descriptionIndex)?.Trim();
             var definition = definitionIndex == -1 ? string.Empty : reader.GetField<string>(definitionIndex);
             var system = systemIndex == -1 ? string.Empty : reader.GetField<string>(systemIndex);
-            var disallowInFilter = disallowInFilterIndex == -1 ? null : reader.GetField<bool?>(disallowInFilterIndex);
 
             if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(type))
             {
                 continue;
             }
 
-            var definitionRecord = new DigitaleDeltaDefinition { Name = name, ODataDataType = type, Description = description, Definition = definition, System = system, DisallowInFilter = disallowInFilter };
+            var definitionRecord = new DigitaleDeltaDefinition { Name = name, ODataDataType = type, Description = description, Definition = definition, System = system, };
 
             if (!dictionary.TryAdd(name, definitionRecord))
             {

@@ -3,6 +3,7 @@
 
 using DigitaleDelta.DdApiV3ToolKit.Customization;
 using DigitaleDelta.QueryService;
+using Microsoft.Extensions.Caching.Memory;
 using Serilog;
 
 namespace DigitaleDelta.DdApiV3ToolKit.Configuration;
@@ -22,9 +23,10 @@ public static class CustomServicesExtensions
     {
         // Load plugin settings from configuration
         var pluginSettings = new PluginSettings();
+
         builder.Configuration.GetSection("PluginSettings").Bind(pluginSettings);
 
-        // Initialize plugin loader
+        // Initialise plugin loader
         var pluginLoader = new PluginLoader(pluginSettings);
         pluginLoader.LoadPlugins();
 
@@ -48,9 +50,7 @@ public static class CustomServicesExtensions
 
         builder.Services.AddScoped<IAuthorization>(serviceProvider =>
         {
-            var authorization = pluginLoader.FindAndCreateInstance<IAuthorization>(
-                pluginSettings.AuthorizationHandler,
-                serviceProvider);
+            var authorization = pluginLoader.FindAndCreateInstance<IAuthorization>(pluginSettings.AuthorizationHandler, serviceProvider);
 
             if (authorization != null)
             {
@@ -58,9 +58,10 @@ public static class CustomServicesExtensions
                 return authorization;
             }
 
-            // Fallback to built-in Authorize (allows all access by default)
-            Log.Warning("No plugin Authorization found, using built-in default: {TypeName} (allows ALL access). For production use, create a plugin or modify Customization/Authorize.cs", typeof(Authorize).FullName);
-            return new Authorize(serviceProvider.GetRequiredService<IConfiguration>());
+            // Fallback to built-in Authorise (allows all access by default)
+            Log.Warning("No plugin Authorisation found, using built-in default: {TypeName} (allows ALL access). For production use, create a plugin or modify Customization/Authorize.cs", typeof(Authorize).FullName);
+
+            return new Authorize(serviceProvider.GetRequiredService<IConfiguration>(), serviceProvider.GetRequiredService<IMemoryCache>());
         });
 
         return builder;

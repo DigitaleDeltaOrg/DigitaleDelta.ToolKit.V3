@@ -22,7 +22,7 @@ public class ODataErrorHandlingMiddleware(RequestDelegate next, ILogger<ODataErr
     /// </summary>
     /// <param name="context">The current HTTP context representing the details of the incoming request and response.</param>
     /// <returns>Returns a task that represents the asynchronous execution of the middleware logic.</returns>
-    public async Task Invoke(HttpContext context)
+    public async Task InvokeAsync(HttpContext context)
     {
         try
         {
@@ -31,12 +31,22 @@ public class ODataErrorHandlingMiddleware(RequestDelegate next, ILogger<ODataErr
         catch (ODataValidationException ex)
         {
             var requestId = context.TraceIdentifier;
+
             logger.LogWarning(ex, "RequestId: {RequestId} - Validation error: {Message}", requestId, ex.Message);
-            context.Response.StatusCode = 400;
-            context.Response.ContentType = "application/json";
+
+            if (context.Response.HasStarted)
+            {
+                logger.LogWarning("RequestId: {RequestId} - Cannot write OData validation error response because the response has already started.", requestId);
+
+                throw;
+            }
+
+            context.Response.Clear();
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            context.Response.ContentType = "application/json; charset=utf-8";
 
             var errorMessage = $"{ex.Message} (RequestId: {requestId})";
-            var error = ODataErrorResponseHelper.Create(ex.Code ?? "ValidationError", errorMessage);
+            var error = ODataErrorResponseHelper.Create(ex.Code ?? "ValidationError", errorMessage, StatusCodes.Status400BadRequest);
 
             await context.Response.WriteAsync(JsonSerializer.Serialize(error.Value));
         }
@@ -44,13 +54,25 @@ public class ODataErrorHandlingMiddleware(RequestDelegate next, ILogger<ODataErr
         {
             var requestId = context.TraceIdentifier;
             logger.LogError(ex, "RequestId: {RequestId} - Unexpected error: {Message}", requestId, ex.Message);
-            context.Response.StatusCode = 500;
-            context.Response.ContentType = "application/json";
+
+            if (context.Response.HasStarted)
+            {
+                logger.LogWarning(
+                    "RequestId: {RequestId} - Cannot write generic error response because the response has already started.",
+                    requestId);
+
+                throw;
+            }
+
+            context.Response.Clear();
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            context.Response.ContentType = "application/json; charset=utf-8";
 
             var errorMessage = $"An unexpected error occurred. (RequestId: {requestId})";
-            var error = ODataErrorResponseHelper.Create("ServerError", errorMessage, 500);
+            var error = ODataErrorResponseHelper.Create("ServerError", errorMessage, StatusCodes.Status500InternalServerError);
 
             await context.Response.WriteAsync(JsonSerializer.Serialize(error.Value));
         }
     }
 }
+

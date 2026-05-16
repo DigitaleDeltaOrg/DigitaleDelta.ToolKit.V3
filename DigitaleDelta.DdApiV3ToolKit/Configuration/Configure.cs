@@ -21,7 +21,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Data.SqlClient;
 using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.Caching.Memory;
 using MySql.Data.MySqlClient;
 using Npgsql;
 using Oracle.ManagedDataAccess.Client;
@@ -48,7 +47,6 @@ public static class Configure
         builder.ConfigureLogging();
 
         var databaseConnectionFactory = DatabaseConnectionFactory(builder.Configuration);
-        var cache = new MemoryCache(new MemoryCacheOptions());
         var baseParameters = new BaseParameters
         {
             ParameterPrefix = builder.Configuration.GetValue<char?>("ParameterPrefix") ?? '@'
@@ -81,7 +79,6 @@ public static class Configure
         });
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddSingleton<IConfiguration>(_ => builder.Configuration);
-        builder.Services.AddSingleton<IMemoryCache>(cache);
         builder.Services.AddSingleton(baseParameters);
         builder.Services.AddSingleton(new MarkdownPipelineBuilder().UseAdvancedExtensions().Build());
         builder.Services.AddOptions();
@@ -89,7 +86,15 @@ public static class Configure
         builder.Services.AddProblemDetails();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddRequestDecompression();
-        builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
+
+        if (builder.Configuration.GetValue<bool>("ResponseCompression:Enabled"))
+        {
+            builder.Services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = builder.Configuration.GetValue<bool>("ResponseCompression:EnableForHttps");
+            });
+        }
+
         builder.Services.AddDigitaleDeltaAuthentication(builder.Configuration);
         builder.Services.AddAuthorization();
         builder.Services.AddCors(CorsOptions(builder.Configuration));
@@ -109,17 +114,18 @@ public static class Configure
         application.UseForwardedHeaders();
         application.UseCors("Cors");
         application.UseODataErrorHandling(); // Middleware for handling OData errors
-        application.UseExceptionHandler();
-        application.UseDeveloperExceptionPage();
         application.UseMiddleware<RequestExtensions.QueryToHeaderMiddleware>();
         application.UseRouting();
         application.UseStaticFiles(new StaticFileOptions { ServeUnknownFileTypes = true, DefaultContentType  = "application/xml" });
-        application.UseMiddleware<DevAuthenticationMiddleware>(); // Only runs when the debugger is attached.
+        //application.UseMiddleware<DevAuthenticationMiddleware>(); // Only runs when the debugger is attached.
         application.UseMiddleware<AuthenticationMiddleware>();
         application.UseAuthentication();
         application.UseAuthorization();
         application.UseRequestDecompression();
-        application.UseMiddleware<JsonToYamlMiddleware>();
+        if (application.Configuration.GetValue<bool>("ResponseCompression:Enabled"))
+        {
+            application.UseResponseCompression();
+        }
         application.UseMiddleware<FixKennisPlatformApiComplianceMiddleware>();
 
         var appFileContents = application.Services.GetRequiredService<AppFileContents>();
@@ -295,6 +301,7 @@ public static class Configure
         var functionMapping = builder.Configuration.GetSection($"{key}:FunctionMapping").Get<List<ODataFunctionMap>>();
         var dataQueryFile = builder.Configuration.GetValue<string>($"{key}:DataQueryFile") ?? string.Empty;
         var countQueryFile = builder.Configuration.GetValue<string>($"{key}:CountQueryFile") ?? string.Empty;
+        var requireFilter = builder.Configuration.GetValue<bool>($"{key}:RequireFilter");
 
         if (propertyMapping == null || propertyMapping.Count == 0)
         {
@@ -319,7 +326,8 @@ public static class Configure
             CountCachePeriod = builder.Configuration.GetValue<int?>("CountCachePeriod") ?? 5,
             HmacAlgorithm = builder.Configuration.GetValue<string>("HmacAlgorithm") ?? "HMACSHA256",
             MaxPageSize = builder.Configuration.GetValue<int?>($"{key}:MaxPageSize") ?? 10000,
-            DefaultPageSize = builder.Configuration.GetValue<int?>($"{key}:MaxPageSize") ?? 1000
+            DefaultPageSize = builder.Configuration.GetValue<int?>($"{key}:MaxPageSize") ?? 1000,
+            RequireFilter = requireFilter
         };
     }
 

@@ -93,4 +93,9 @@ public abstract record ErrorMessages
     /// Property not allowed in filter
     /// </summary>
     public const string propertyNotAllowedInFilter = "Property '{0}' is not allowed in filter expressions.";
+
+    /// <summary>
+    /// Required property not found in filter
+    /// </summary>
+    public const string requiredPropertyNotFoundInFilter = "Property '{0}' is required but not found in filter expression.";
 }

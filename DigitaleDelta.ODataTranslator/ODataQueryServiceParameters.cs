@@ -164,7 +164,12 @@ public class ODataQueryServiceParameters
     /// </summary>
     /// <remarks>
     /// This property determines the fallback page size for paginated OData results. It is useful for ensuring consistent paging
-    /// behavior when clients do not specify a custom page size or when the requested page size is not applicable.
+    /// behaviour when clients do not specify a custom page size or when the requested page size is not applicable.
     /// </remarks>
     public int DefaultPageSize { init; get; }
+
+    /// <summary>
+    /// Specifies whether the query requires a filter condition to be present.
+    /// </summary>
+    public bool RequireFilter { init; get; }
 }

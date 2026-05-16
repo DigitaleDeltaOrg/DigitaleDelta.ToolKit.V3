@@ -24,20 +24,49 @@ public class ODataFilterValidator(Dictionary<string, ODataToSqlMap> propertyMaps
         if (filterContext == null)
         {
             error = ErrorMessages.filterContextIsNull;
+
             return false;
         }
 
         var (isValid, errorPart) = ValidateFilterExpression(filterContext.filterExpr());
         error = isValid ? null : string.Format(ErrorMessages.invalidFilterExpression, errorPart);
+
         return isValid;
+    }
+
+    /// <summary>
+    /// Validates the provided filter expression against the configured property and function maps.
+    /// </summary>
+    /// <param name="context">The filter expression context to validate.</param>
+    /// <returns>A tuple containing a boolean indicating validation success and a string with an error message if validation fails.</returns>
+    private (bool Valid, string? Error) ValidateFilterExpression(ODataParser.FilterExprContext context)
+    {
+        var propertiesFound = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        var validationResult = ValidateFilterExpression(context, propertiesFound);
+        if (!validationResult.Valid)
+        {
+            return validationResult;
+        }
+
+        var missingRequiredProperties = propertyMaps
+            .Where(propertyMap => propertyMap.Value.RequireInFilter)
+            .Where(propertyMap => !propertiesFound.Contains(propertyMap.Key))
+            .Select(propertyMap => string.Format(ErrorMessages.requiredPropertyNotFoundInFilter, propertyMap.Key))
+            .ToList();
+
+        return missingRequiredProperties.Count == 0
+            ? (true, null)
+            : (false, string.Join(", ", missingRequiredProperties));
     }
 
     /// <summary>
     /// Validates a filter expression recursively.
     /// </summary>
     /// <param name="context"></param>
+    /// <param name="propertiesFound"></param>
     /// <returns></returns>
-    private (bool Valid, string? Error) ValidateFilterExpression(ODataParser.FilterExprContext context)
+    private (bool Valid, string? Error) ValidateFilterExpression(ODataParser.FilterExprContext context, HashSet<string> propertiesFound)
     {
         // Primary expression (property path or literal)
         if (context.primary() != null)
@@ -56,7 +85,14 @@ public class ODataFilterValidator(Dictionary<string, ODataToSqlMap> propertyMaps
                 return (false, string.Format(ErrorMessages.unknownProperty, propertyPath));
             }
 
-            return propertyMap.DisallowInFilter ? (false, string.Format(ErrorMessages.propertyNotAllowedInFilter, propertyPath)) : (true, null);
+            if (propertyMap.DisallowInFilter)
+            {
+                return (false, string.Format(ErrorMessages.propertyNotAllowedInFilter, propertyPath));
+            }
+
+            propertiesFound.Add(propertyPath);
+
+            return (true, null);
         }
 
         // Function call
@@ -68,25 +104,25 @@ public class ODataFilterValidator(Dictionary<string, ODataToSqlMap> propertyMaps
         // Unary NOT
         if (context.filterExpr().Length == 1 && context.NOT() != null)
         {
-            return ValidateFilterExpression(context.filterExpr(0));
+            return ValidateFilterExpression(context.filterExpr(0), propertiesFound);
         }
 
         // Parenthesized expression
         if (context.LPAREN() != null && context.RPAREN() != null)
         {
-            return ValidateFilterExpression(context.filterExpr(0));
+            return ValidateFilterExpression(context.filterExpr(0), propertiesFound);
         }
 
         // Binary expression (AND, OR, comparison)
         if (context.filterExpr().Length == 2)
         {
-            var leftValid = ValidateFilterExpression(context.filterExpr(0));
+            var leftValid = ValidateFilterExpression(context.filterExpr(0), propertiesFound);
             if (!leftValid.Valid)
             {
                 return leftValid;
             }
 
-            var rightValid = ValidateFilterExpression(context.filterExpr(1));
+            var rightValid = ValidateFilterExpression(context.filterExpr(1), propertiesFound);
             return rightValid;
         }
 
@@ -239,6 +275,7 @@ public class ODataFilterValidator(Dictionary<string, ODataToSqlMap> propertyMaps
         if (string.IsNullOrWhiteSpace(propertyPath))
         {
             propertyMap = null;
+
             return false;
         }
 
@@ -264,8 +301,7 @@ public class ODataFilterValidator(Dictionary<string, ODataToSqlMap> propertyMaps
         }
 
         // boolean literal
-        if (string.Equals(text, "true", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(text, "false", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(text, "true", StringComparison.OrdinalIgnoreCase) || string.Equals(text, "false", StringComparison.OrdinalIgnoreCase))
         {
             return "Edm.Boolean";
         }
@@ -300,8 +336,7 @@ public class ODataFilterValidator(Dictionary<string, ODataToSqlMap> propertyMaps
     /// </summary>
     /// <param name="s"></param>
     /// <returns></returns>
-    private static bool IsQuoted(string s) =>
-        s.Length >= 2 && ((s[0] == '\'' && s[^1] == '\'') || (s[0] == '"' && s[^1] == '"'));
+    private static bool IsQuoted(string s) => s.Length >= 2 && ((s[0] == '\'' && s[^1] == '\'') || (s[0] == '"' && s[^1] == '"'));
 
     /// <summary>
     /// Maps EDM type to expected type for function validation.

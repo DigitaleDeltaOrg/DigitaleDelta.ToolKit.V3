@@ -27,7 +27,7 @@ public class ApiKeyAuthenticationHandler(string headerName) : IAuthenticationHan
     public Task<bool> TryAuthenticateAsync(HttpContext context, out ClaimsPrincipal? principal)
     {
         principal = null;
-        
+
         if (context.Request.Headers.TryGetValue(headerName, out var apiKey))
         {
             // Hier kun je evt. claims bepalen o.b.v. apiKey
@@ -35,7 +35,7 @@ public class ApiKeyAuthenticationHandler(string headerName) : IAuthenticationHan
             var identity = new ClaimsIdentity(claims, authenticationType: "APIKEY");
 
             principal = new ClaimsPrincipal(identity);
-            
+
             return Task.FromResult(true);
         }
 
