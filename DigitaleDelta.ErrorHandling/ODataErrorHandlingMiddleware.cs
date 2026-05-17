@@ -28,6 +28,28 @@ public class ODataErrorHandlingMiddleware(RequestDelegate next, ILogger<ODataErr
         {
             await next(context);
         }
+        catch (ODataApiException ex)
+        {
+            var requestId = context.TraceIdentifier;
+
+            logger.LogWarning(ex, "RequestId: {RequestId} - API error: {Message}", requestId, ex.Message);
+
+            if (context.Response.HasStarted)
+            {
+                logger.LogWarning("RequestId: {RequestId} - Cannot write API error response because the response has already started.", requestId);
+
+                throw;
+            }
+
+            context.Response.Clear();
+            context.Response.StatusCode = ex.StatusCode;
+            context.Response.ContentType = "application/json; charset=utf-8";
+
+            var errorMessage = $"{ex.Message} (RequestId: {requestId})";
+            var error = ODataErrorResponseHelper.Create(ex.Code ?? "ApiError", errorMessage, ex.StatusCode);
+
+            await context.Response.WriteAsync(JsonSerializer.Serialize(error.Value));
+        }
         catch (ODataValidationException ex)
         {
             var requestId = context.TraceIdentifier;

@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Data.Common;
+using System.Net;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Dapper;
@@ -88,19 +89,19 @@ public class QueryService
 
         if (!authorizationResult.authorised)
         {
-            throw new ODataValidationException("Not authorized to access this resource.");
+            throw new ODataApiException("Not authorized to access this resource.", (int)HttpStatusCode.Forbidden);
         }
 
         var queryResult = await GetDataAsync(oDataQueryOptions, whereClause, authorizationResult.access, httpContext.TraceIdentifier).ConfigureAwait(false);
 
-        if (queryResult == null || queryResult.HasError)
+        if (!authorizationResult.authorised)
         {
-            throw new ODataValidationException($"Error: {error}");
+            throw new ODataApiException("Not authorized to access this resource.", StatusCodes.Status403Forbidden, "Forbidden");
         }
 
-        _requestLogger.LogResponse(httpContext.TraceIdentifier, succeeded: true, DateTimeOffset.Now, DateTime.UtcNow - start, queryResult.Data?.Count);
+        _requestLogger.LogResponse(httpContext.TraceIdentifier, succeeded: true, DateTimeOffset.Now, DateTime.UtcNow - start, queryResult?.Data?.Count);
 
-        return CreateResponse(httpContext, queryResult, oDataQueryOptions);
+        return CreateResponse(httpContext, queryResult ?? new QueryResult(), oDataQueryOptions);
     }
 
     /// <summary>

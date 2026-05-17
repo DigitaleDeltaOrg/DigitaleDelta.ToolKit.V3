@@ -112,20 +112,22 @@ public static class Configure
     public static WebApplication ConfigureApplication(this WebApplication application)
     {
         application.UseForwardedHeaders();
-        application.UseCors("Cors");
         application.UseODataErrorHandling(); // Middleware for handling OData errors
         application.UseMiddleware<RequestExtensions.QueryToHeaderMiddleware>();
         application.UseRouting();
+        application.UseCors("Cors");
         application.UseStaticFiles(new StaticFileOptions { ServeUnknownFileTypes = true, DefaultContentType  = "application/xml" });
         //application.UseMiddleware<DevAuthenticationMiddleware>(); // Only runs when the debugger is attached.
         application.UseMiddleware<AuthenticationMiddleware>();
         application.UseAuthentication();
         application.UseAuthorization();
         application.UseRequestDecompression();
+
         if (application.Configuration.GetValue<bool>("ResponseCompression:Enabled"))
         {
             application.UseResponseCompression();
         }
+
         application.UseMiddleware<FixKennisPlatformApiComplianceMiddleware>();
 
         var appFileContents = application.Services.GetRequiredService<AppFileContents>();
@@ -385,14 +387,9 @@ public static class Configure
     {
         services.Configure<ForwardedHeadersOptions>(options =>
         {
-            options.ForwardedHeaders =
-                ForwardedHeaders.XForwardedFor |
-                ForwardedHeaders.XForwardedProto |
-                ForwardedHeaders.XForwardedHost;
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
 
-            var knownProxies = configuration
-                .GetSection("ForwardedHeaders:KnownProxies")
-                .Get<string[]>() ?? [];
+            var knownProxies = configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>() ?? [];
 
             foreach (var proxy in knownProxies)
             {
@@ -402,9 +399,7 @@ public static class Configure
                 }
             }
 
-            var knownNetworks = configuration
-                .GetSection("ForwardedHeaders::KnownIPNetworks")
-                .Get<string[]>() ?? [];
+            var knownNetworks = configuration.GetSection("ForwardedHeaders::KnownIPNetworks").Get<string[]>() ?? [];
 
             foreach (var network in knownNetworks)
             {

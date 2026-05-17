@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2025 - EcoSys
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-using DigitaleDelta.Contracts;
 using DigitaleDelta.DdApiV3ToolKit.Configuration;
 using DigitaleDelta.ODataTranslator;
 using DigitaleDelta.QueryService;
@@ -58,7 +57,7 @@ public class ODataObservationController : ControllerBase
     /// Processes an OData query request for observations and returns the query results.
     /// </summary>
     /// <remarks>
-    /// The method uses OData query options to handle and execute the query against observations data.
+    /// The method uses OData query options to handle and execute the query against observations-data.
     /// It employs mechanisms for request processing, logging, caching, and authorisation to ensure proper execution and security.
     /// </remarks>
     /// <returns>

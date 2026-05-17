@@ -41,7 +41,7 @@ public static class ConfigurationValidator
     private static readonly List<string> _requiredProperties =
     [
         "Id",
-        "Type",
+        "ObservationType",
         "ValidTime/BeginPosition",
         "PhenomenonTime/BeginPosition",
         "PhenomenonTime/EndPosition",
@@ -602,14 +602,14 @@ $"""
 
             if (!validProperties.ContainsKey(contextName))
             {
-                LogError($"Fout in configuratie: ContextDefinition voor '{contextName}' ontbreekt in de opgegeven ContextDefinitions URL.");
+                LogError($"Fout in configuratie: {prefix}Definition voor '{contextName}' ontbreekt in de opgegeven ContextDefinitions URL.");
 
                 continue;
             }
 
             if (validProperties[contextName].ODataDataType != item.EdmType)
             {
-                LogError($"Fout in configuratie: ContextDefinition type mismatch voor '{contextName}'. Verwacht: '{item.EdmType}', Gevonden: '{validProperties[contextName]}'.");
+                LogError($"Fout in configuratie: {prefix}Definition type mismatch voor '{contextName}'. Verwacht: '{item.EdmType}', Gevonden: '{validProperties[contextName].ODataDataType}'.");
             }
         }
     }
