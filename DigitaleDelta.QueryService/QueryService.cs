@@ -94,6 +94,11 @@ public class QueryService
 
         var queryResult = await GetDataAsync(oDataQueryOptions, whereClause, authorizationResult.access, httpContext.TraceIdentifier).ConfigureAwait(false);
 
+        if (queryResult?.HasError == true)
+        {
+            throw new ODataValidationException(queryResult.ErrorDetails ?? "ValidationError: An error occurred while processing the request.");
+        }
+
         if (!authorizationResult.authorised)
         {
             throw new ODataApiException("Not authorized to access this resource.", StatusCodes.Status403Forbidden, "Forbidden");
