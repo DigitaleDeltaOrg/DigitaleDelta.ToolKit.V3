@@ -123,6 +123,7 @@ public class QueryService
             .IncludeCount(oDataQueryOptions.Count ?? false)
             .WithEntitySet(_parameters.EntitySetName)
             .WithSelectProperties(oDataQueryOptions.Select?.AsEnumerable())
+            .WithQuery(context.Request.QueryString.Value)
             .WithPagination(queryResult.SkipToken, queryResult.TotalCount)
             .HasMoreData(queryResult.MoreData)
             .Build();
