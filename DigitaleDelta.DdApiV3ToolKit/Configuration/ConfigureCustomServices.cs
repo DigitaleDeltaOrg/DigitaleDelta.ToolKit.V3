@@ -61,7 +61,7 @@ public static class CustomServicesExtensions
             // Fallback to built-in Authorise (allows all access by default)
             Log.Warning("No plugin Authorisation found, using built-in default: {TypeName} (allows ALL access). For production use, create a plugin or modify Customization/Authorize.cs", typeof(Authorize).FullName);
 
-            return new Authorize(serviceProvider.GetRequiredService<IConfiguration>(), serviceProvider.GetRequiredService<IMemoryCache>());
+            return new Authorize(serviceProvider.GetRequiredService<IConfiguration>());
         });
 
         return builder;
