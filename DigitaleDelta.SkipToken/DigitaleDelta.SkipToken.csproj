@@ -10,7 +10,7 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Title>SkipTokenHelper for Digitale Delta</Title>
         <PackageId>DigitaleDelta.SkipToken</PackageId>
-        <Version>1.0.1</Version>
+        <Version>3.0.0</Version>
         <Authors>EcoSys</Authors>
         <Company>EcoSys, Digitale Delta</Company>
         <Description>A .NET library designed to work with OData services within the Digitale Delta ecosystem. It provides a SkipTokenHelper.</Description>

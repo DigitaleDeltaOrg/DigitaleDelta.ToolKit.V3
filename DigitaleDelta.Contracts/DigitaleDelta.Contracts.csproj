@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PackageId>DigitaleDelta.Contracts</PackageId>
-        <Version>1.0.1</Version>
+        <Version>3.0.0</Version>
         <Authors>EcoSys</Authors>
         <Company>EcoSys, Digitale Delta</Company>
         <Description>A .NET library designed to work with OData services within the Digitale Delta ecosystem. It provides a set of contracts (models) for CSDL definitions.</Description>
@@ -37,6 +37,6 @@
 
     <ItemGroup>
         <!-- This is the key part for monorepo support -->
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.203" PrivateAssets="All" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" PrivateAssets="All" />
     </ItemGroup>
 </Project>

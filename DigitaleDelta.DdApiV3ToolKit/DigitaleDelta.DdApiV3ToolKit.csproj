@@ -5,24 +5,27 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>14</LangVersion>
+        <Title>Digitale Delta V3 toolkit</Title>
+        <PackageProjectUrl>https://github.com/DigitaleDeltaOrg/ODataLib-CSharp.git</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/DigitaleDeltaOrg/ODataLib-CSharp.git</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="CsvHelper" Version="33.1.0" />
         <PackageReference Include="Markdig" Version="1.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.7" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.8" />
         <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
-        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.7" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.2" />
-        <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="10.0.7" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.7" />
-        <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.7" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
         <PackageReference Include="MySql.Data" Version="9.7.0" />
         <PackageReference Include="Npgsql" Version="10.0.2" />
         <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.200" />
-        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.7" />
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8" />
         <PackageReference Include="Serilog" Version="4.3.1" />
         <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
         <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
@@ -77,11 +80,15 @@
         </Content>
     </ItemGroup>
 
+    <PropertyGroup>
+      <SatelliteResourceLanguages>en;nl</SatelliteResourceLanguages>
+    </PropertyGroup>
+  
     <ItemGroup>
-      <None Update="LICENSE">
-        <Pack>true</Pack>
-        <PackagePath></PackagePath>
-      </None>
+      <Content Update="ConfigurationFiles/**/*">
+        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>
