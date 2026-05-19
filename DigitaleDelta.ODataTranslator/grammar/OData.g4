@@ -64,10 +64,10 @@ function
     | TIME LPAREN filterExpr RPAREN
     | DISTANCE LPAREN filterExpr RPAREN
     | INTERSECTS LPAREN STRING RPAREN
-    | FLOOR LPAREN filterExpr COMMA filterExpr RPAREN
-    | CEIL LPAREN filterExpr COMMA filterExpr RPAREN
-    | ROUND LPAREN filterExpr COMMA filterExpr RPAREN
-    | ABS LPAREN filterExpr COMMA filterExpr RPAREN
+    | FLOOR LPAREN filterExpr RPAREN
+    | CEIL LPAREN filterExpr RPAREN
+    | ROUND LPAREN filterExpr RPAREN
+    | ABS LPAREN filterExpr RPAREN
     ;
 
 comparison
