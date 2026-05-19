@@ -45,6 +45,7 @@ public static class Configure
     public static WebApplicationBuilder ConfigureServices(this WebApplicationBuilder builder)
     {
         builder.ConfigureLogging();
+        ConfigureGeometryPrecision(builder.Configuration);
 
         var databaseConnectionFactory = DatabaseConnectionFactory(builder.Configuration);
         var baseParameters = new BaseParameters
@@ -356,6 +357,26 @@ public static class Configure
         builder.Services.AddSerilog();
 
         return builder;
+    }
+
+    private static void ConfigureGeometryPrecision(IConfiguration configuration)
+    {
+        var defaultDecimals = configuration.GetValue<int?>("GeometryPrecision:Default");
+
+        if (defaultDecimals.HasValue)
+        {
+            ODataTranslator.Helpers.CrsHelper.SetDefaultPrecision(defaultDecimals.Value);
+        }
+
+        var perSrid = configuration.GetSection("GeometryPrecision:PerSrid").GetChildren();
+
+        foreach (var entry in perSrid)
+        {
+            if (int.TryParse(entry.Key, out var srid) && int.TryParse(entry.Value, out var decimals))
+            {
+                ODataTranslator.Helpers.CrsHelper.SetPrecision(srid, decimals);
+            }
+        }
     }
 
     /// <summary>

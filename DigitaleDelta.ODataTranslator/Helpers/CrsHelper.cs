@@ -1,4 +1,5 @@
 ﻿using NetTopologySuite.Geometries;
+using NetTopologySuite.Precision;
 using ProjNet.CoordinateSystems;
 using ProjNet.CoordinateSystems.Transformations;
 
@@ -12,6 +13,57 @@ public static class CrsHelper
 {
 	private static readonly CoordinateSystemFactory         CsFactory = new();
 	private static readonly CoordinateTransformationFactory CtFactory = new();
+
+	/// <summary>
+	/// Default number of decimal places to keep per SRID when emitting coordinates.
+	/// Projected CRS (meters) default to 1 decimal (~10cm); geographic CRS (degrees) to 6 decimals (~11cm).
+	/// Override at startup via appsettings (GeometryPrecision) and <see cref="SetPrecision"/>.
+	/// </summary>
+	private static readonly Dictionary<int, int> CoordinateDecimals = new()
+	{
+		{ 28992, 1 },
+		{ 25831, 1 },
+		{ 3035,  1 },
+		{ 27700, 1 },
+		{ 3857,  1 },
+		{ 4258,  6 },
+		{ 4326,  6 },
+	};
+
+	private static int _defaultDecimals = 6;
+
+	/// <summary>
+	/// Configure rounding precision for a specific SRID. Pass <paramref name="decimals"/> = -1 to disable rounding for that SRID.
+	/// </summary>
+	public static void SetPrecision(int srid, int decimals) => CoordinateDecimals[srid] = decimals;
+
+	/// <summary>
+	/// Configure the fallback precision used when an SRID is not explicitly mapped.
+	/// </summary>
+	public static void SetDefaultPrecision(int decimals) => _defaultDecimals = decimals;
+
+	private static int GetDecimals(int srid) => CoordinateDecimals.TryGetValue(srid, out var d) ? d : _defaultDecimals;
+
+	/// <summary>
+	/// Returns the geometry with its coordinates rounded to the configured precision for the given SRID.
+	/// </summary>
+	public static Geometry Round(Geometry geometry, int srid)
+	{
+		var decimals = GetDecimals(srid);
+
+		if (decimals < 0)
+		{
+			return geometry;
+		}
+
+		var reducer = new GeometryPrecisionReducer(new PrecisionModel(Math.Pow(10, decimals)));
+		var reduced = reducer.Reduce(geometry);
+
+		reduced.SRID = geometry.SRID;
+
+		return reduced;
+	}
+
 	public static readonly Dictionary<int, string> SupportedCrs = new()
 	{
 		{ 4326, """
@@ -156,7 +208,9 @@ public static class CrsHelper
 		var transformation       = CtFactory.CreateFromCoordinateSystems(fromCoordinateSystem, toCoordinateSystem);
 		var transformedGeometry  = TransformGeometry(geometry, transformation.MathTransform);
 
-		return (true, transformedGeometry);
+		transformedGeometry.SRID = toId;
+
+		return (true, Round(transformedGeometry, toId));
 	}
 
 	/// <summary>
@@ -178,7 +232,9 @@ public static class CrsHelper
 		var transformation       = CtFactory.CreateFromCoordinateSystems(fromCoordinateSystem, toCoordinateSystem);
 		var transformedGeometry  = TransformGeometry(geometry, transformation.MathTransform);
 
-		return (true, transformedGeometry);
+		transformedGeometry.SRID = toId;
+
+		return (true, Round(transformedGeometry, toId));
 	}
 
 	private static Geometry TransformGeometry(Geometry geometry, MathTransform transform)

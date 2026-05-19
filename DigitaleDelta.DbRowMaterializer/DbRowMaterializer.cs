@@ -335,7 +335,7 @@ public static class DbRowMaterializer
 
             if (targetSrid is not > 0 || geom.SRID == targetSrid.Value)
             {
-                return geom;
+                return ODataTranslator.Helpers.CrsHelper.Round(geom, geom.SRID);
             }
 
             var (ok, transformed) = ODataTranslator.Helpers.CrsHelper.TransformGeometry(targetSrid.Value, geom);
@@ -347,6 +347,7 @@ public static class DbRowMaterializer
             if (!ok || transformed == null)
             {
                 geom.SRID = targetSrid.Value;
+                geom = ODataTranslator.Helpers.CrsHelper.Round(geom, targetSrid.Value);
             }
 
             return geom;
