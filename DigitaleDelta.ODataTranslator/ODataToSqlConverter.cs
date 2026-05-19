@@ -274,16 +274,6 @@ public class ODataToSqlConverter(Dictionary<string, ODataToSqlMap> propertyMaps,
                     }
                 }
 
-                var converted = ConvertDistanceToMetersIfNeeded(threshold, srid);
-
-                if (!string.IsNullOrEmpty(right.SqlQuery) && right.SqlQuery[0] == parameterPrefix && _parameters.ContainsKey(right.SqlQuery))
-                {
-                    _parameters[right.SqlQuery] = converted;
-                }
-                else
-                {
-                    right = (right.Success, right.ErrorMessage, CreateParameter(converted));
-                }
             }
 
             if (!left.Success || !right.Success)
@@ -405,30 +395,7 @@ public class ODataToSqlConverter(Dictionary<string, ODataToSqlMap> propertyMaps,
     {
         if (LooksLikeWktLiteral(literal))
         {
-            try
-            {
-                literal = UnwrapQuotes(literal);
-
-                var r = new NetTopologySuite.IO.WKTReader();
-                var g = r.Read(literal);
-
-                g.SRID = srid;
-
-                var (ok, g4258) = CrsHelper.TransformGeometry(srid, 4258, g);
-                var res = ok && g4258 != null ? g4258 : g;
-
-                res.SRID = 4258;
-
-                var w = new NetTopologySuite.IO.WKTWriter { MaxCoordinatesPerLine = int.MaxValue };
-
-                literal = w.Write(res); // vervang literal
-
-                return (true, null, CreateParameter(literal));
-            }
-            catch
-            {
-                return (true, null, CreateParameter(literal));
-            }
+            return (true, null, CreateParameter(UnwrapQuotes(literal)));
         }
 
         if (literal.Equals("null", StringComparison.OrdinalIgnoreCase))
@@ -481,26 +448,4 @@ public class ODataToSqlConverter(Dictionary<string, ODataToSqlMap> propertyMaps,
         return UnwrapQuotes(sqlQuery);
     }
 
-    /// <summary>
-    /// Convert distance (degrees) to meters if needed
-    /// </summary>
-    /// <param name="threshold"></param>
-    /// <param name="srid"></param>
-    /// <returns></returns>
-    private static object ConvertDistanceToMetersIfNeeded(object threshold, int srid)
-    {
-        const double metersPerDegree = 111320.0;
-
-        if (srid is not (28992 or 25831 or 3035 or 27700))
-        {
-            return threshold;
-        }
-
-        if (double.TryParse(threshold.ToString(), out var parsed))
-        {
-            return parsed / metersPerDegree;
-        }
-
-        return threshold;
-    }
 }

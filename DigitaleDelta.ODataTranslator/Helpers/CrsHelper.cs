@@ -12,7 +12,7 @@ public static class CrsHelper
 {
 	private static readonly CoordinateSystemFactory         CsFactory = new();
 	private static readonly CoordinateTransformationFactory CtFactory = new();
-	private static readonly Dictionary<int, string> SupportedCrs = new()
+	public static readonly Dictionary<int, string> SupportedCrs = new()
 	{
 		{ 4326, """
 		        GEOGCS["WGS 84",
@@ -43,14 +43,14 @@ public static class CrsHelper
 		             GEOGCS["Amersfoort",
 		                 DATUM["Amersfoort",
 		                     SPHEROID["Bessel 1841",6377397.155,299.1528128],
-		                     TOWGS84[565.4171,50.3319,465.5524,1.9342,-1.6677,9.1019,4.0725]],
+		                     TOWGS84[565.2369,50.0087,465.658,-0.406857,0.350733,-1.87035,4.0812]],
 		                 PRIMEM["Greenwich",0,
 		                     AUTHORITY["EPSG","8901"]],
 		                 UNIT["degree",0.0174532925199433,
 		                     AUTHORITY["EPSG","9122"]],
 		                 AUTHORITY["EPSG","4289"]],
 		             PROJECTION["Oblique_Stereographic"],
-		             PARAMETER["latitude_of_origin",52.1561605555556],
+		             PARAMETER["latitude_of_origin",52.15616055555555],
 		             PARAMETER["central_meridian",5.38763888888889],
 		             PARAMETER["scale_factor",0.9999079],
 		             PARAMETER["false_easting",155000],
@@ -180,7 +180,7 @@ public static class CrsHelper
 
 		return (true, transformedGeometry);
 	}
-	
+
 	private static Geometry TransformGeometry(Geometry geometry, MathTransform transform)
 	{
 		var transformedCoordinates = geometry.Coordinates.Select(coordinate =>
@@ -218,7 +218,7 @@ public static class CrsHelper
 			for (var i = 0; i < geometry.NumGeometries; i++)
 			{
 				var polygon = (Polygon)geometry.GetGeometryN(i);
-				polygons[i] = (Polygon)polygon.CopyWithNewCoordinates(polygon.Coordinates.Select(coord => 
+				polygons[i] = (Polygon)polygon.CopyWithNewCoordinates(polygon.Coordinates.Select(coord =>
 				                                                                                 {
 					                                                                                 var transformedCoordinate = transform.Transform(new[] { coord.X, coord.Y });
 					                                                                                 return new Coordinate(transformedCoordinate[0], transformedCoordinate[1]);

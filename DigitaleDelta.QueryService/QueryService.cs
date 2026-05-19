@@ -187,7 +187,8 @@ public class QueryService
 
         try
         {
-            _logger.LogInformation("RequestId: {RequestId} - Executing SQL query: {SqlQuery}", requestId, dataSqlStatement);
+            var paramDump = string.Join(", ", dataParams.ParameterNames.Select(n => $"{n}={dataParams.Get<object?>(n) ?? "NULL"}"));
+            _logger.LogInformation("RequestId: {RequestId} - Executing SQL query: {SqlQuery} -- Params: {Params}", requestId, dataSqlStatement, paramDump);
 
             await using var reader = await connection.ExecuteReaderAsync(new CommandDefinition(dataSqlStatement, dataParams, commandTimeout: 120)).ConfigureAwait(false);
             var idODataKey = _parameters.ReversePropertyMap.TryGetValue(_parameters.IdField, out var idKey) ? idKey.ODataPropertyName : "Id";

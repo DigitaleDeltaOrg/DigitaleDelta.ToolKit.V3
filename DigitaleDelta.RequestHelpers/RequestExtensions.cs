@@ -167,9 +167,13 @@ public static class RequestExtensions
 
         var crs = CrsHelper.ValidateContentCrs(value);
 
-        return crs == null
-            ? throw new HttpRequestException("Accept-Crs", null, HttpStatusCode.PreconditionFailed)
-            : (value, crs);
+        if (crs == null)
+        {
+            var supportedCrs = string.Join(", ", CrsHelper.SupportedCrs.Keys.Select(a => $"EPSG:{a}").ToList());
+            throw new ODataApiException($"Accept-Crs unknown, supported: {supportedCrs}", (int)HttpStatusCode.PreconditionFailed, "Invalid CRS");
+        }
+
+        return (value, crs);
     }
 
     /// <summary>
