@@ -295,13 +295,13 @@
       },
       {
         "ODataFunctionName": "distance",
-        "SqlFunctionFormat": "ST_Distance(geography, ST_GeomFromText({0}, 4326))",
+        "SqlFunctionFormat": "ST_Distance(ST_Transform(geography, 28992), ST_Transform(ST_GeomFromText({0}, @srid), 28992))",
         "ExpectedArgumentTypes": ["string"],
         "ReturnType": "Edm.Decimal"
       },
       {
         "ODataFunctionName": "intersects",
-        "SqlFunctionFormat": "ST_Intersects(geography, ST_GeomFromText({0}, 4326))",
+        "SqlFunctionFormat": "ST_Intersects(geography, ST_Transform(ST_GeomFromText({0}, @srid), 4258))",
         "ExpectedArgumentTypes": ["string"],
         "ReturnType": "Edm.Boolean"
       }
