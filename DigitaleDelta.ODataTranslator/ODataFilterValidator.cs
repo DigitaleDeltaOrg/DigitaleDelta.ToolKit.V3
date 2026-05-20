@@ -176,10 +176,23 @@ public class ODataFilterValidator(Dictionary<string, ODataToSqlMap> propertyMaps
             return (false, string.Format(ErrorMessages.functionParameterCountMismatch, functionName, functionMap.ExpectedArgumentTypes.Count, arguments.Length));
         }
 
-        // Validate each argument type
+        // Validate each argument: enforce DisallowInFilter for property references, then check type
         for (var i = 0; i < arguments.Length; i++)
         {
             var argument = arguments[i];
+
+            if (argument.primary() != null)
+            {
+                var propertyPath = argument.primary().GetText();
+
+                if (!propertyPath.IsLiteralValue()
+                    && TryGetPropertyMap(propertyPath, out var propertyMap)
+                    && propertyMap is { DisallowInFilter: true })
+                {
+                    return (false, string.Format(ErrorMessages.propertyNotAllowedInFilter, propertyPath));
+                }
+            }
+
             var expectedType = functionMap.ExpectedArgumentTypes[i];
             var actualType = GetExpressionEdmType(argument);
 
@@ -353,6 +366,11 @@ public class ODataFilterValidator(Dictionary<string, ODataToSqlMap> propertyMaps
         var t = edmType.StartsWith("Edm.", StringComparison.OrdinalIgnoreCase)
             ? edmType[4..]
             : edmType;
+
+        if (t.StartsWith("Collection(", StringComparison.OrdinalIgnoreCase))
+        {
+            return "collection";
+        }
 
         return t.ToLowerInvariant() switch
         {

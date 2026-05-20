@@ -115,6 +115,11 @@
                 <Parameter Type="Edm.String" />
                 <ReturnType Type="Edm.Double" Nullable="false" />
             </Function>
+            <Function Name="has" IsBound="false">
+                <Parameter Type="Collection(Edm.String)" />
+                <Parameter Type="Edm.String" />
+                <ReturnType Type="Edm.Boolean" Nullable="false" />
+            </Function>
             <EntityContainer Name="Container">
                 <EntitySet Name="references" EntityType="DigitaleDeltaModels.Reference"/>
                 <EntitySet Name="observations" EntityType="DigitaleDeltaModels.Observation"/>

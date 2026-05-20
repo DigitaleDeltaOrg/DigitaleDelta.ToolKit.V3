@@ -145,6 +145,20 @@ public class ODataToSqlConverterTests
                 ReturnType = "Edm.String",
                 SqlFunctionFormat = "ILIKE({0}, {1})",
                 WildCardSymbol = "%"
+            },
+            new()
+            {
+                ODataFunctionName = "has",
+                ExpectedArgumentTypes = ["collection", "string"],
+                ReturnType = "Edm.Boolean",
+                SqlFunctionFormat = "{1} = ANY({0})"
+            },
+            new()
+            {
+                ODataFunctionName = "distance",
+                ExpectedArgumentTypes = ["string"],
+                ReturnType = "Edm.Decimal",
+                SqlFunctionFormat = "ST_Distance(ST_Transform(geography, 28992), ST_Transform(ST_GeomFromText({0}, @srid), 28992))"
             }
         };
 
@@ -159,7 +173,8 @@ public class ODataToSqlConverterTests
             new() { ODataPropertyName = "Price", Query = "price", EdmType = "Edm.Double", ColumnName = "price" },
             new() { ODataPropertyName = "ResultOf", Query = "result", EdmType = "Edm.String", ColumnName = "result" },
             new() { ODataPropertyName = "PhenomenonTime/BeginPosition", Query = "phenomenon_time_start", EdmType = "Edm.DateTimeOffset", ColumnName = "phenomenon_time_start"},
-            new() { ODataPropertyName = "Address/Street", Query = "street", EdmType = "Edm.String", ColumnName = "street" }
+            new() { ODataPropertyName = "Address/Street", Query = "street", EdmType = "Edm.String", ColumnName = "street" },
+            new() { ODataPropertyName = "Tags", Query = "tags", EdmType = "Collection(Edm.String)", ColumnName = "tags" }
         };
 
         return map.ToDictionary(m => m.ODataPropertyName, m => m, StringComparer.OrdinalIgnoreCase);
@@ -268,6 +283,50 @@ public class ODataToSqlConverterTests
         Assert.NotNull(sqlResult);
         Assert.Null(error);
         Assert.Equal("name = @p1 AND price > @p2", sqlResult.Sql);
+    }
+
+    [Fact]
+    public void TryConvertFilterToSql_HasFunction_OnCollection_ReturnsExpectedSql()
+    {
+        var converter = new ODataToSqlConverter(GetPropertyMaps(), GetFunctionMaps());
+        ODataFilter.TryParse("$filter=has(Tags, 'foo')", out var context, out var error);
+
+        Assert.NotNull(context);
+        var result = converter.TryConvert(context.Context, out error, out var sqlResult);
+
+        Assert.True(result);
+        Assert.Null(error);
+        Assert.NotNull(sqlResult);
+        Assert.Equal("((@p1 = ANY(tags)) = 1)", sqlResult.Sql);
+    }
+
+    [Fact]
+    public void TryConvertFilterToSql_HasFunction_OnScalar_ReturnsValidationError()
+    {
+        ODataFilter.TryParse("$filter=has(Name, 'foo')", out var filter, out _);
+
+        Assert.NotNull(filter);
+        var validator = new ODataFilterValidator(GetPropertyMaps(), GetFunctionMaps());
+        var ok = validator.TryValidate(filter.Context, out var error);
+
+        Assert.False(ok);
+        Assert.NotNull(error);
+    }
+
+    [Fact]
+    public void AndBranch_PropagatesSubExpressionErrors()
+    {
+        // When a sub-expression (here: distance validation) fails, the whole conversion must fail —
+        // not silently produce SQL with an empty segment that would crash the database.
+        var converter = new ODataToSqlConverter(GetPropertyMaps(), GetFunctionMaps(), srid: 4258);
+        ODataFilter.TryParse("$filter=Name eq 'HHN' and distance('POINT (4.9238 52.87469)') lt 2000", out var context, out _);
+
+        Assert.NotNull(context);
+        var ok = converter.TryConvert(context.Context, out var error, out var sqlResult);
+
+        Assert.False(ok);
+        Assert.NotNull(error);
+        Assert.Null(sqlResult);
     }
 
     [Fact]

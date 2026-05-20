@@ -301,6 +301,12 @@ public class ODataToSqlConverter(Dictionary<string, ODataToSqlMap> propertyMaps,
         {
             var left            = TryConvertFilterExpressionToSql(context.filterExpr(0));
             var right           = TryConvertFilterExpressionToSql(context.filterExpr(1));
+
+            if (!left.Success || !right.Success)
+            {
+                return (false, left.ErrorMessage ?? right.ErrorMessage, null);
+            }
+
             var logicalOperator = context.AND() != null ? "AND" : "OR";
             var leftQuery = context.filterExpr(0).AND() != null || context.filterExpr(0).OR() != null ? $"({left.SqlQuery})" : left.SqlQuery;
             var rightQuery = context.filterExpr(1).AND() != null || context.filterExpr(1).OR() != null ? $"({right.SqlQuery})" : right.SqlQuery;

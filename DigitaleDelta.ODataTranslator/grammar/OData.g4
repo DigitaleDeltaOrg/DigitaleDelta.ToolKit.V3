@@ -64,6 +64,7 @@ function
     | TIME LPAREN filterExpr RPAREN
     | DISTANCE LPAREN filterExpr RPAREN
     | INTERSECTS LPAREN STRING RPAREN
+    | HAS LPAREN filterExpr COMMA filterExpr RPAREN
     | FLOOR LPAREN filterExpr RPAREN
     | CEIL LPAREN filterExpr RPAREN
     | ROUND LPAREN filterExpr RPAREN
@@ -129,6 +130,7 @@ NOW        : 'now' ;
 DATE       : 'date' ;
 DISTANCE   : 'distance' ;
 INTERSECTS : 'intersects' ;
+HAS        : 'has' ;
 
 // Case-insensitive keywords to match OData specification
 EQ        : '=' ;

@@ -15,7 +15,7 @@ public sealed class ODataFunctionNormalizer
     [
         "contains","startswith","endswith","now","tolower","toupper","length","index","substring","trim",
         "year","month","day","hour","minute","second","date","time","floor","ceil","round","abs",
-        "distance","intersects"
+        "distance","intersects","has"
     ];
 
     /// <summary>
