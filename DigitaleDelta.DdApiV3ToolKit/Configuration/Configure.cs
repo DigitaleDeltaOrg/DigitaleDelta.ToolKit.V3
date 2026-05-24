@@ -156,19 +156,19 @@ public static class Configure
     private static void ConfigureStaticFileEndpoints(WebApplication application, AppFileContents appFileContents)
     {
         // Serve static files, which are based on templates.
-        application.MapGet("/wwwroot/DigitaleDelta.svg", async context => { context.Response.ContentType = "image/svg+xml"; await context.Response.WriteAsync(appFileContents.SvgText); });
-        application.MapGet("/v3/DigitaleDelta.svg", async context => { context.Response.ContentType = "image/svg+xml"; await context.Response.WriteAsync(appFileContents.SvgText); });
-        application.MapGet("/v3/odata/$metadata", async context => { context.Response.ContentType = "application/xml; charset=utf-8"; await context.Response.WriteAsync(appFileContents.CsdlText); });
-        application.MapGet("/v3/openapi.yaml", async context => { context.Response.ContentType = "application/yaml"; await context.Response.WriteAsync(appFileContents.OpenApiText); });
-        application.MapGet("/v3/openapi.json", async context => await SetResponseHeadersAndWriteJson(context, appFileContents));
-        application.MapGet("/v3/openapi", async context => await SetResponseHeadersAndWriteJson(context, appFileContents));
-        application.MapGet("/v3/", async context => await SendFile(context, "text/html", Path.Combine(configurationFilesPath, "index.html")));
-        application.MapGet("/v3/index.html", async context => await SendFile(context, "text/html", Path.Combine(configurationFilesPath, "index.html")));
-        application.MapGet("/v3/swagger", async context => await SendFile(context, "text/html", Path.Combine(configurationFilesPath, "swagger.html")));
-        application.MapGet("/v3/redoc", async context => await SendFile(context, "text/html", Path.Combine(configurationFilesPath, "redoc.html")));
-        application.MapGet("/v3/swagger.html", async context => await SendFile(context, "text/html", Path.Combine(configurationFilesPath, "swagger.html")));
-        application.MapGet("/v3/redoc.html", async context => await SendFile(context, "text/html", Path.Combine(configurationFilesPath, "redoc.html")));
-        application.MapGet("/", async context => await SendFile(context, "text/html", Path.Combine(configurationFilesPath, "default-index.html")));
+        application.MapGet("/wwwroot/DigitaleDelta.svg", async context => { context.Response.ContentType = "image/svg+xml"; await context.Response.WriteAsync(appFileContents.SvgText); }).AllowAnonymous();
+        application.MapGet("/v3/DigitaleDelta.svg", async context => { context.Response.ContentType = "image/svg+xml"; await context.Response.WriteAsync(appFileContents.SvgText); }).AllowAnonymous();
+        application.MapGet("/v3/odata/$metadata", async context => { context.Response.ContentType = "application/xml; charset=utf-8"; await context.Response.WriteAsync(appFileContents.CsdlText); }).AllowAnonymous();
+        application.MapGet("/v3/openapi.yaml", async context => { context.Response.ContentType = "application/yaml"; await context.Response.WriteAsync(appFileContents.OpenApiText); }).AllowAnonymous();
+        application.MapGet("/v3/openapi.json", async context => await SetResponseHeadersAndWriteJson(context, appFileContents)).AllowAnonymous();
+        application.MapGet("/v3/openapi", async context => await SetResponseHeadersAndWriteJson(context, appFileContents)).AllowAnonymous();
+        application.MapGet("/v3/", async context => await SendFile(context, "text/html", Path.Combine(configurationFilesPath, "index.html"))).AllowAnonymous();
+        application.MapGet("/v3/index.html", async context => await SendFile(context, "text/html", Path.Combine(configurationFilesPath, "index.html"))).AllowAnonymous();
+        application.MapGet("/v3/swagger", async context => await SendFile(context, "text/html", Path.Combine(configurationFilesPath, "swagger.html"))).AllowAnonymous();
+        application.MapGet("/v3/redoc", async context => await SendFile(context, "text/html", Path.Combine(configurationFilesPath, "redoc.html"))).AllowAnonymous();
+        application.MapGet("/v3/swagger.html", async context => await SendFile(context, "text/html", Path.Combine(configurationFilesPath, "swagger.html"))).AllowAnonymous();
+        application.MapGet("/v3/redoc.html", async context => await SendFile(context, "text/html", Path.Combine(configurationFilesPath, "redoc.html"))).AllowAnonymous();
+        application.MapGet("/", async context => await SendFile(context, "text/html", Path.Combine(configurationFilesPath, "default-index.html"))).AllowAnonymous();
         application.MapGet("/health", () => Results.Ok(new { status = "Healthy" })).AllowAnonymous();
     }
 

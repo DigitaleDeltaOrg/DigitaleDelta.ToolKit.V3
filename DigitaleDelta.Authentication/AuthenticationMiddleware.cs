@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
@@ -31,6 +32,15 @@ public class AuthenticationMiddleware(RequestDelegate next, AuthenticationHandle
     /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
     public async Task InvokeAsync(HttpContext context)
     {
+        var endpoint = context.GetEndpoint();
+
+        if (endpoint?.Metadata.GetMetadata<IAllowAnonymous>() is not null)
+        {
+            await next(context);
+
+            return;
+        }
+
         var handler = factory.Create(_settings.Type);
 
         if (!await handler.TryAuthenticateAsync(context, out var principal).ConfigureAwait(false))
