@@ -43,9 +43,6 @@
         <PackageReference Include="Serilog.Sinks.Exceptionless" Version="5.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
         <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="9.0.3" />
-        <PackageReference Include="Serilog.Sinks.Oracle" Version="1.1.1" />
-        <PackageReference Include="Serilog.Sinks.PostgreSQL" Version="2.3.0" />
-        <PackageReference Include="Serilog.Sinks.PostgreSQL.Configuration" Version="1.0.1" />
         <PackageReference Include="Serilog.Sinks.Sentry" Version="2.4.3" />
         <PackageReference Include="Serilog.Sinks.Splunk" Version="5.2.0" />
         <PackageReference Include="SwashBuckle.AspNetCore.MicrosoftExtensions" Version="0.5.0" />

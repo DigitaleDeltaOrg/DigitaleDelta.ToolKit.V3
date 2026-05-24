@@ -41,10 +41,10 @@ public class FixKennisPlatformApiComplianceMiddleware(RequestDelegate next, ICon
         }
 
         // API-48: Leave off trailing slashes from URIs
-        // Exception: root path "/" is allowed
+        // Exceptions: root path "/" and any path that has an explicitly mapped endpoint
         var path = context.Request.Path.ToString();
 
-        if (!path.EndsWith('/') || path == "/")
+        if (!path.EndsWith('/') || path == "/" || context.GetEndpoint() is not null)
         {
             return next.Invoke(context);
         }
