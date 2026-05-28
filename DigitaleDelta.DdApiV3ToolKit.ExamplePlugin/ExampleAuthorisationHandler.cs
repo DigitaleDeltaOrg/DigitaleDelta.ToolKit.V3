@@ -11,7 +11,7 @@ namespace DigitaleDelta.DdApiV3ToolKit.ExamplePlugin;
 /// Example implementation of IAuthorization that allows all access.
 /// In production, implement your own authorisation logic based on claims, roles, database checks, etc.
 /// </summary>
-public class ExampleAuthorizationHandler : IAuthorization
+public class ExampleAuthorisationHandler : IAuthorisation
 {
     private readonly IConfiguration _configuration;
 
@@ -19,7 +19,7 @@ public class ExampleAuthorizationHandler : IAuthorization
     /// Constructor with dependency injection support.
     /// You can inject any service registered in the application's DI container.
     /// </summary>
-    public ExampleAuthorizationHandler(IConfiguration configuration)
+    public ExampleAuthorisationHandler(IConfiguration configuration)
     {
         _configuration = configuration;
     }

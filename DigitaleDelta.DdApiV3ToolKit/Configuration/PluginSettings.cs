@@ -14,13 +14,6 @@ public class PluginSettings
     public string PluginDirectory { get; set; } = "Plugins";
 
     /// <summary>
-    /// Fully qualified type name of the IAuthorization implementation to use.
-    /// Format: Namespace.ClassName, AssemblyName
-    /// If not specified, a plugin must be found in the plugin directory.
-    /// </summary>
-    public string? AuthorizationHandler { get; set; }
-
-    /// <summary>
     /// Fully qualified type name of the IRequestLogger implementation to use.
     /// Format: Namespace.ClassName, AssemblyName
     /// If not specified, the default console logger will be used.

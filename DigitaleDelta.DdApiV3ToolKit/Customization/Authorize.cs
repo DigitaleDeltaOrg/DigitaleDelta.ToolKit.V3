@@ -11,7 +11,7 @@ namespace DigitaleDelta.DdApiV3ToolKit.Customization;
 /// <summary>
 /// Implement authorisation based on the identity of the requester, in the form of a ClaimsPrincipal.
 /// </summary>
-public class Authorize(IConfiguration configuration) : IAuthorization
+public class Authorize(IConfiguration configuration) : IAuthorisation
 {
     /// <summary>
     /// Implement authorisation logic. ClaimsPrincipal contains the identity of the requester. Configuration can be used to read any settings needed.

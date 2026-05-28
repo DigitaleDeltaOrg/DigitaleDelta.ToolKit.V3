@@ -3,7 +3,6 @@
 
 using System.Reflection;
 using System.Runtime.Loader;
-using DigitaleDelta.QueryService;
 using Serilog;
 
 namespace DigitaleDelta.DdApiV3ToolKit.Configuration;
@@ -11,29 +10,24 @@ namespace DigitaleDelta.DdApiV3ToolKit.Configuration;
 /// <summary>
 /// Loads plugins from DLL files using reflection.
 /// </summary>
-public class PluginLoader
+public class PluginLoader(PluginSettings settings)
 {
-    private readonly PluginSettings _settings;
     private readonly List<Assembly> _loadedAssemblies = new();
-
-    public PluginLoader(PluginSettings settings)
-    {
-        _settings = settings;
-    }
 
     /// <summary>
     /// Loads all plugin assemblies from the configured plugin directory.
     /// </summary>
     public void LoadPlugins()
     {
-        var pluginDirectory = Path.IsPathRooted(_settings.PluginDirectory)
-            ? _settings.PluginDirectory
-            : Path.Combine(Directory.GetCurrentDirectory(), _settings.PluginDirectory);
+        var pluginDirectory = Path.IsPathRooted(settings.PluginDirectory)
+            ? settings.PluginDirectory
+            : Path.Combine(Directory.GetCurrentDirectory(), settings.PluginDirectory);
 
         if (!Directory.Exists(pluginDirectory))
         {
             Log.Warning("Plugin directory {PluginDirectory} does not exist. Creating it.", pluginDirectory);
             Directory.CreateDirectory(pluginDirectory);
+
             return;
         }
 
@@ -44,6 +38,7 @@ public class PluginLoader
             try
             {
                 var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(dllFile);
+
                 _loadedAssemblies.Add(assembly);
                 Log.Information("Loaded plugin assembly: {AssemblyName} from {DllFile}", assembly.FullName, dllFile);
             }
@@ -67,6 +62,7 @@ public class PluginLoader
         if (!string.IsNullOrWhiteSpace(configuredTypeName))
         {
             var instance = CreateInstanceFromTypeName<T>(configuredTypeName, serviceProvider);
+
             if (instance != null)
             {
                 return instance;
@@ -77,6 +73,7 @@ public class PluginLoader
         foreach (var assembly in _loadedAssemblies)
         {
             var instance = FindInstanceInAssembly<T>(assembly, serviceProvider);
+
             if (instance != null)
             {
                 return instance;
@@ -89,22 +86,26 @@ public class PluginLoader
     /// <summary>
     /// Creates an instance from a fully qualified type name.
     /// </summary>
-    private T? CreateInstanceFromTypeName<T>(string typeName, IServiceProvider serviceProvider) where T : class
+    private static T? CreateInstanceFromTypeName<T>(string typeName, IServiceProvider serviceProvider) where T : class
     {
         try
         {
             var type = Type.GetType(typeName);
-            if (type == null)
+
+            if (type != null)
             {
-                Log.Error("Could not find type {TypeName}", typeName);
-                return null;
+                return CreateInstance<T>(type, serviceProvider);
             }
 
-            return CreateInstance<T>(type, serviceProvider);
+            Log.Error("Could not find type {TypeName}", typeName);
+
+            return null;
+
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to create instance of type {TypeName}", typeName);
+
             return null;
         }
     }
@@ -112,24 +113,24 @@ public class PluginLoader
     /// <summary>
     /// Finds an instance of T in the given assembly.
     /// </summary>
-    private T? FindInstanceInAssembly<T>(Assembly assembly, IServiceProvider serviceProvider) where T : class
+    private static T? FindInstanceInAssembly<T>(Assembly assembly, IServiceProvider serviceProvider) where T : class
     {
         try
         {
             var interfaceType = typeof(T);
             var types = assembly.GetTypes()
-                .Where(t => t.IsClass && !t.IsAbstract && interfaceType.IsAssignableFrom(t))
+                .Where(t => t is { IsClass: true, IsAbstract: false } && interfaceType.IsAssignableFrom(t))
                 .ToList();
 
-            if (types.Count == 0)
+            switch (types.Count)
             {
-                return null;
-            }
+                case 0:
+                    return null;
+                case > 1:
+                    Log.Warning("Found multiple implementations of {InterfaceType} in assembly {AssemblyName}. Using the first one: {TypeName}",
+                        interfaceType.Name, assembly.FullName, types[0].FullName);
 
-            if (types.Count > 1)
-            {
-                Log.Warning("Found multiple implementations of {InterfaceType} in assembly {AssemblyName}. Using the first one: {TypeName}",
-                    interfaceType.Name, assembly.FullName, types[0].FullName);
+                    break;
             }
 
             return CreateInstance<T>(types[0], serviceProvider);
@@ -137,6 +138,7 @@ public class PluginLoader
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to find instance of {InterfaceType} in assembly {AssemblyName}", typeof(T).Name, assembly.FullName);
+
             return null;
         }
     }
@@ -144,7 +146,7 @@ public class PluginLoader
     /// <summary>
     /// Creates an instance of the given type with constructor dependency injection.
     /// </summary>
-    private T? CreateInstance<T>(Type type, IServiceProvider serviceProvider) where T : class
+    private static T? CreateInstance<T>(Type type, IServiceProvider serviceProvider) where T : class
     {
         try
         {
@@ -171,20 +173,26 @@ public class PluginLoader
                     parameterInstances[i] = service ?? parameter.DefaultValue;
                 }
 
-                if (allResolved)
+                if (!allResolved)
                 {
-                    var instance = constructor.Invoke(parameterInstances);
-                    Log.Information("Created instance of {TypeName}", type.FullName);
-                    return instance as T;
+                    continue;
                 }
+
+                var instance = constructor.Invoke(parameterInstances);
+
+                Log.Information("Created instance of {TypeName}", type.FullName);
+
+                return instance as T;
             }
 
             Log.Error("Could not resolve all constructor dependencies for type {TypeName}", type.FullName);
+
             return null;
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to create instance of type {TypeName}", type.FullName);
+
             return null;
         }
     }

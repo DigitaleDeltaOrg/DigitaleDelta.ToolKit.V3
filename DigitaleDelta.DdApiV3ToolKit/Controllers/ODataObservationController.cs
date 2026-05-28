@@ -27,7 +27,7 @@ public class ODataObservationController : ControllerBase
     private readonly ILogger<ODataObservationController> _logger;
     private readonly IMemoryCache _memoryCache;
     private readonly IRequestLogger _requestLogger;
-    private readonly IAuthorization _authorizationService;
+    private readonly IAuthorisation _authorisationService;
     private readonly BaseParameters _baseParameters;
 
     /// <summary>
@@ -37,19 +37,19 @@ public class ODataObservationController : ControllerBase
     /// This controller is configured to handle requests routed to "v3/odata/observations".
     /// It integrates functionalities for rate limiting, logging, caching, and authorisation.
     /// </remarks>
-    public ODataObservationController(BaseParameters baseParameters, [FromKeyedServices("ObservationQueryServiceParameters")] ODataQueryServiceParameters oDataQueryServiceParameters, ILogger<ODataObservationController> logger, IMemoryCache memoryCache, IRequestLogger requestLogger, IAuthorization authorizationService)
+    public ODataObservationController(BaseParameters baseParameters, [FromKeyedServices("ObservationQueryServiceParameters")] ODataQueryServiceParameters oDataQueryServiceParameters, ILogger<ODataObservationController> logger, IMemoryCache memoryCache, IRequestLogger requestLogger, [FromKeyedServices("ObservationController")] IAuthorisation authorisationService)
     {
         ArgumentNullException.ThrowIfNull(oDataQueryServiceParameters);
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(memoryCache);
         ArgumentNullException.ThrowIfNull(requestLogger);
-        ArgumentNullException.ThrowIfNull(authorizationService);
+        ArgumentNullException.ThrowIfNull(authorisationService);
 
         _oDataQueryServiceParameters = oDataQueryServiceParameters;
         _logger = logger;
         _memoryCache = memoryCache;
         _requestLogger = requestLogger;
-        _authorizationService = authorizationService;
+        _authorisationService = authorisationService;
         _baseParameters = baseParameters;
     }
 
@@ -66,7 +66,7 @@ public class ODataObservationController : ControllerBase
     public async Task<IActionResult> Get()
     {
         var oDataQueryOptions = Request.ToODataQueryOptions(_oDataQueryServiceParameters.PropertyMap, _oDataQueryServiceParameters.FunctionMap, _oDataQueryServiceParameters.DefaultPageSize, _oDataQueryServiceParameters.MaxPageSize, _oDataQueryServiceParameters.RequireFilter);
-        var queryService = new DigitaleDelta.QueryService.QueryService(_oDataQueryServiceParameters, _logger, _memoryCache, _requestLogger, _authorizationService);
+        var queryService = new DigitaleDelta.QueryService.QueryService(_oDataQueryServiceParameters, _logger, _memoryCache, _requestLogger, _authorisationService);
         var response = await queryService.ProcessRequestAsync(Request.HttpContext, oDataQueryOptions, parameterPrefix: _baseParameters.ParameterPrefix).ConfigureAwait(false);
 
         return response != null ? response : BadRequest();

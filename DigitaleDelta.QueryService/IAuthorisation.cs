@@ -8,7 +8,7 @@ namespace DigitaleDelta.QueryService;
 /// <summary>
 /// Interface for implementing authorisation logic.
 /// </summary>
-public interface IAuthorization
+public interface IAuthorisation
 {
     /// <summary>
     /// Attempt to authorise the given ClaimsPrincipal.

@@ -27,7 +27,7 @@ public class QueryService
     private readonly ILogger _logger;
     private readonly IMemoryCache _cache;
     private readonly IRequestLogger _requestLogger;
-    private readonly IAuthorization _authorizationService;
+    private readonly IAuthorisation _authorisationService;
     private readonly HashSet<string> _excludedProperties;
 
     /// <summary>
@@ -37,20 +37,20 @@ public class QueryService
     /// <param name="logger">Logger</param>
     /// <param name="cache">Cache service (for count queries)</param>
     /// <param name="requestLogger">Request logger service</param>
-    /// <param name="authorizationService">Authorisation service</param>
-    public QueryService(ODataQueryServiceParameters parameters, ILogger logger, IMemoryCache cache, IRequestLogger requestLogger, IAuthorization authorizationService)
+    /// <param name="authorisationService">Authorisation service</param>
+    public QueryService(ODataQueryServiceParameters parameters, ILogger logger, IMemoryCache cache, IRequestLogger requestLogger, IAuthorisation authorisationService)
     {
         ArgumentNullException.ThrowIfNull(parameters);
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(cache);
         ArgumentNullException.ThrowIfNull(requestLogger);
-        ArgumentNullException.ThrowIfNull(authorizationService);
+        ArgumentNullException.ThrowIfNull(authorisationService);
 
         _parameters = parameters;
         _logger = logger;
         _cache = cache;
         _requestLogger = requestLogger;
-        _authorizationService = authorizationService;
+        _authorisationService = authorisationService;
         _excludedProperties = _parameters.PropertyMap
             .Where(kvp => kvp.Value.ExcludeFromResponse)
             .Select(kvp => kvp.Value.ODataPropertyName)
@@ -85,7 +85,7 @@ public class QueryService
             throw new ODataValidationException(error ?? string.Empty);
         }
 
-        var authorizationResult = await _authorizationService.TryAuthorizeAsync(oDataQueryOptions.ClaimsPrincipal).ConfigureAwait(false);
+        var authorizationResult = await _authorisationService.TryAuthorizeAsync(oDataQueryOptions.ClaimsPrincipal).ConfigureAwait(false);
 
         if (!authorizationResult.authorised)
         {

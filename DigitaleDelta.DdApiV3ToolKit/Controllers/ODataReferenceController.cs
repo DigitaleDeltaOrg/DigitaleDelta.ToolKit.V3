@@ -6,6 +6,7 @@ using DigitaleDelta.DdApiV3ToolKit.Configuration;
 using DigitaleDelta.ODataTranslator;
 using DigitaleDelta.QueryService;
 using DigitaleDelta.RequestHelpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
@@ -24,6 +25,7 @@ namespace DigitaleDelta.DdApiV3ToolKit.Controllers;
 /// </remarks>
 [Route("v3/odata/references")]
 [ApiController]
+[AllowAnonymous]
 [EnableRateLimiting("ReferenceController")]
 public class ODataReferenceController : ControllerBase
 {
@@ -31,7 +33,7 @@ public class ODataReferenceController : ControllerBase
     private readonly ILogger<ODataReferenceController> _logger;
     private readonly IMemoryCache _memoryCache;
     private readonly IRequestLogger _requestLogger;
-    private readonly IAuthorization _authorizationService;
+    private readonly IAuthorisation _authorisationService;
     private readonly BaseParameters _baseParameters;
 
     /// <summary>
@@ -41,19 +43,19 @@ public class ODataReferenceController : ControllerBase
     /// API Route: "v3/odata/references"
     /// Rate Limiting: Enabled via "ReferenceController" policy
     /// </summary>
-    public ODataReferenceController(BaseParameters baseParameters, [FromKeyedServices("ReferenceQueryServiceParameters")] ODataQueryServiceParameters oDataQueryServiceParameters, ILogger<ODataReferenceController> logger, IMemoryCache memoryCache, IRequestLogger requestLogger, IAuthorization authorizationService)
+    public ODataReferenceController(BaseParameters baseParameters, [FromKeyedServices("ReferenceQueryServiceParameters")] ODataQueryServiceParameters oDataQueryServiceParameters, ILogger<ODataReferenceController> logger, IMemoryCache memoryCache, IRequestLogger requestLogger, [FromKeyedServices("ReferenceController")] IAuthorisation authorisationService)
     {
         ArgumentNullException.ThrowIfNull(oDataQueryServiceParameters);
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(memoryCache);
         ArgumentNullException.ThrowIfNull(requestLogger);
-        ArgumentNullException.ThrowIfNull(authorizationService);
+        ArgumentNullException.ThrowIfNull(authorisationService);
 
         _oDataQueryServiceParameters = oDataQueryServiceParameters;
         _logger = logger;
         _memoryCache = memoryCache;
         _requestLogger = requestLogger;
-        _authorizationService = authorizationService;
+        _authorisationService = authorisationService;
         _baseParameters = baseParameters;
     }
 
@@ -67,7 +69,7 @@ public class ODataReferenceController : ControllerBase
     public async Task<IActionResult> Get()
     {
         var oDataQueryOptions = Request.ToODataQueryOptions(_oDataQueryServiceParameters.PropertyMap, _oDataQueryServiceParameters.FunctionMap, _oDataQueryServiceParameters.DefaultPageSize, _oDataQueryServiceParameters.MaxPageSize, _oDataQueryServiceParameters.RequireFilter);
-        var queryService = new DigitaleDelta.QueryService.QueryService(_oDataQueryServiceParameters, _logger, _memoryCache, _requestLogger, _authorizationService);
+        var queryService = new DigitaleDelta.QueryService.QueryService(_oDataQueryServiceParameters, _logger, _memoryCache, _requestLogger, _authorisationService);
         var response = await queryService.ProcessRequestAsync(Request.HttpContext, oDataQueryOptions, _baseParameters.ParameterPrefix).ConfigureAwait(false);
 
         return response != null ? response : BadRequest();
