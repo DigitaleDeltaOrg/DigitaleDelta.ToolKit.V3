@@ -22,7 +22,7 @@ public static class CsdlFlattener
         ArgumentNullException.ThrowIfNull(entityTypeName);
 
         var entity = ResolveEntityType(model, entityTypeName, nameComparison);
-        
+
         if (entity == null)
         {
             yield break;
@@ -43,10 +43,7 @@ public static class CsdlFlattener
     /// <param name="filterEdmType">An optional filter to include only properties of a specific EDM type.</param>
     /// <param name="cmp">The string comparison option for type name matching.</param>
     /// <returns>A collection of tuples containing property paths and their corresponding EDM types.</returns>
-    private static IEnumerable<(string Path, string EdmType)> WalkEntity(CsdlModel model, EntityType entity, string? prefix, string? filterEdmType, StringComparison cmp)
-    {
-        return entity.Properties.SelectMany(prop => WalkProperty(model, prop, prefix, filterEdmType, cmp));
-    }
+    private static IEnumerable<(string Path, string EdmType)> WalkEntity(CsdlModel model, EntityType entity, string? prefix, string? filterEdmType, StringComparison cmp) => entity.Properties.SelectMany(prop => WalkProperty(model, prop, prefix, filterEdmType, cmp));
 
     /// <summary>
     /// Traverses properties of a complex type in the CSDL model, yielding paths and their associated EDM types.
@@ -57,10 +54,7 @@ public static class CsdlFlattener
     /// <param name="filterEdmType">An optional filter to include only properties matching a specific EDM type.</param>
     /// <param name="cmp">Specifies the string comparison rules to use for filtering by EDM type.</param>
     /// <returns>A collection of tuples where each tuple contains a property path and its corresponding EDM type.</returns>
-    private static IEnumerable<(string Path, string EdmType)> WalkComplex(CsdlModel model, ComplexType complex, string? prefix, string? filterEdmType, StringComparison cmp)
-    {
-        return complex.Properties.SelectMany(prop => WalkProperty(model, prop, prefix, filterEdmType, cmp));
-    }
+    private static IEnumerable<(string Path, string EdmType)> WalkComplex(CsdlModel model, ComplexType complex, string? prefix, string? filterEdmType, StringComparison cmp) => complex.Properties.SelectMany(prop => WalkProperty(model, prop, prefix, filterEdmType, cmp));
 
     /// <summary>
     /// Traverses the properties of an entity or complex type in a CSDL model and produces a flat list of property paths with their associated EDM types.
@@ -92,7 +86,7 @@ public static class CsdlFlattener
         }
 
         var complex = ResolveComplexType(model, typeName, cmp);
-        
+
         if (complex == null)
         {
             yield break;
@@ -121,7 +115,7 @@ public static class CsdlFlattener
     private static EntityType? ResolveEntityType(CsdlModel model, string entityTypeName, StringComparison cmp)
     {
         var shortName = ShortName(entityTypeName);
-        
+
         return model.EntityTypes.FirstOrDefault(et =>
                    string.Equals(et.Name, entityTypeName, cmp) ||
                    string.Equals(et.Name, shortName, cmp));
@@ -137,7 +131,7 @@ public static class CsdlFlattener
     private static ComplexType? ResolveComplexType(CsdlModel model, string typeName, StringComparison cmp)
     {
         var shortName = ShortName(typeName);
-        
+
         return model.ComplexTypes.FirstOrDefault(ct =>
                    string.Equals(ct.Name, typeName, cmp) ||
                    string.Equals(ct.Name, shortName, cmp));
@@ -151,7 +145,7 @@ public static class CsdlFlattener
     private static string ShortName(string qualified)
     {
         var parts = qualified.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        
+
         return parts.Length == 0 ? qualified : parts[^1];
     }
 }

@@ -70,7 +70,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.True(result);
       Assert.Null(error);
       Assert.NotNull(model);
-      
+
       var properties = model.EntityTypes[0].Properties;
 
       Assert.Equal(EdmType.EdmString, properties[0].EdmType);
@@ -200,7 +200,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Equal("Edm.Int32", complexType.Properties[1].Type);
     }
 
-        
+
     [Fact]
     public void TeyParse_EntityType_NameIsRequired()
     {
@@ -238,7 +238,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Equal("Edm.Int32", entityType.Properties[1].Type);
     }
 
-    
+
     [Fact]
     public void EntityType_SetPropertiesCollection_PropertiesCorrectlySet()
     {
@@ -276,7 +276,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Equal("Edm.String", entityType.Properties[0].Type);
       Assert.Equal("Edm.Int32", entityType.Properties[1].Type);
     }
-    
+
     [Fact]
     public void EntityType_SetKeysCollection_KeysCorrectlySet()
     {
@@ -296,7 +296,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Equal("PropertyOne", entityType.Keys[0]);
       Assert.Equal("PropertyTwo", entityType.Keys[1]);
     }
-    
+
     [Fact]
     public void EntityContainer_GetEntityType_ReturnsCorrectEntityType()
     {
@@ -326,15 +326,15 @@ namespace DigitaleDelta.CsdlParser.Tests
       var result = CsdlParser.TryParse(csdlContent, out var model, out _);
       Assert.True(result);
       Assert.NotNull(model);
-    
+
       // Act
       var entityType = model.EntityContainers[0].EntitySets[0].EntityType;
-    
+
       // Assert
       Assert.NotNull(entityType);
       Assert.Equal("ODataDemo.Product", entityType);
     }
-    
+
     [Fact]
     public void EntityContainer_GetEntityType_EntityTypeNameIsRequired()
     {
@@ -360,7 +360,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.False(result);
       Assert.Equal("EntityType name is required.", error);
     }
-    
+
     [Fact]
     private static void SetEntityContainerName_UpdatesNameCorrectly()
     {
@@ -379,7 +379,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Equal("ODataDemo.Product", entityContainer.EntitySets[0].EntityType);
       Assert.Equal("Products", entityContainer.EntitySets[0].Name);
     }
-      
+
     [Fact]
     private static void SetParameterType_UpdatesParameterTypeCorrectly()
     {
@@ -443,14 +443,14 @@ namespace DigitaleDelta.CsdlParser.Tests
       };
 
       // Act
-      
+
       // Assert
       Assert.Single(model.EntityTypes);
       Assert.Single(model.ComplexTypes);
       Assert.Single(model.Functions);
       Assert.Single(model.EntityContainers);
     }
-    
+
     [Fact]
     private static void TryParse_InvalidContent_ReturnsFalseAndNoModel()
     {
@@ -465,7 +465,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Equal("An error occurred while parsing the CSDL: Root element is missing.", error);
       Assert.Null(model);
     }
-    
+
     [Fact]
     public void TryParse_MalformedXml_ReturnsFalseAndError()
     {
@@ -502,7 +502,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(model);
       Assert.Contains("An error occurred while parsing the CSDL", error);
     }
-    
+
     [Fact]
     public void TryParse_ValidXmlButInvalidCsdlStructure_ReturnsFalseAndError()
     {
@@ -525,7 +525,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(model);
       Assert.Contains("Invalid CSDL format.", error);
     }
-    
+
     [Fact]
     public void EntityContainer_EntitySetWithNonExistentEntityType_ParsesCorrectly()
     {
@@ -553,7 +553,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(error);
       Assert.NotNull(model);
       Assert.Single(model.EntityContainers);
-    
+
       var entitySet = model.EntityContainers[0].EntitySets[0];
       Assert.Equal("Products", entitySet.Name);
       Assert.Equal("ODataDemo.NonExistentProduct", entitySet.EntityType);
@@ -587,7 +587,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(model);
       Assert.Contains("EntityContainer name is required.", error);
     }
-    
+
     [Fact]
     public void EntityContainerEntitySet_RequiresName()
     {
@@ -615,7 +615,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(model);
       Assert.Contains("EntitySet name is required.", error);
     }
-    
+
     [Fact]
     public void EntityContainerEntitySet_RequiresType()
     {
@@ -643,7 +643,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(model);
       Assert.Contains("EntitySet EntityType is required.", error);
     }
-    
+
     [Fact]
     public void TryParse_MissingNamespace_ReturnsFalseAndError()
     {
@@ -670,9 +670,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(model);
       Assert.Contains("Invalid CSDL format.", error);
     }
-    
-    
-    
+
     [Fact]
     public void TryParse_MultipleSchemas_ParsesCorrectly()
     {
@@ -717,12 +715,12 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Single(model.ComplexTypes);
       Assert.Equal("Address", model.ComplexTypes[0].Name);
     }
-    
+
     private static string GetValidCsdlContent()
     {
       return """
              <?xml version="1.0" encoding="utf-8"?>
-             <edmx:Edmx Version="4.0" 
+             <edmx:Edmx Version="4.0"
                   xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx"
                   xmlns="http://docs.oasis-open.org/odata/ns/edm">
                <edmx:DataServices>
@@ -769,7 +767,7 @@ namespace DigitaleDelta.CsdlParser.Tests
              </edmx:Edmx>
              """;
     }
-    
+
     [Fact]
     public void TryParse_MissingPropertyTypeInEntityType_ReturnsFalseWithError()
     {
@@ -800,7 +798,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(model);
       Assert.Contains("Property type is required for EntityType 'Product'", error);
     }
-    
+
     [Fact]
     public void TryParse_WithEnumType_ParsesCorrectly()
     {
@@ -896,7 +894,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(model);
       Assert.Contains("Property name is required for EntityType 'Product'", error);
     }
-    
+
     // Test complex type properties
     [Fact]
     private static void TryParse_ComplexType_MustHaveName()
@@ -924,7 +922,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(model);
       Assert.Contains("ComplexType name is required.", error);
     }
-    
+
     [Fact]
     private static void TryParse_ComplexTypeProperties_MustHaveName()
     {
@@ -952,7 +950,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(model);
       Assert.Contains("Property name is required for ComplexType", error);
     }
-    
+
     [Fact]
     private static void TryParse_ComplexTypeProperties_MustHaveType()
     {
@@ -980,7 +978,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(model);
       Assert.Contains("Property type is required for Property 'bla' in ComplexType 'TEST'.", error);
     }
-    
+
     [Fact]
     private static void TryParse_Function_MustHaveName()
     {
@@ -1007,7 +1005,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(model);
       Assert.Contains("Function name is required.", error);
     }
-    
+
     [Fact]
     private static void TryParse_Function_MustHaveReturnType()
     {
@@ -1034,7 +1032,7 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(model);
       Assert.Contains($"Function return type is required for Function 'TEST'.", error);
     }
-        
+
     [Fact]
     private static void TryParse_Function_FunctionParameterMustHaveParameterType()
     {
@@ -1063,12 +1061,12 @@ namespace DigitaleDelta.CsdlParser.Tests
       Assert.Null(model);
       Assert.Contains($"Parameter type is required for Parameter 'bla' in Function 'TEST'.", error);
     }
-    
+
     private static string GetCsdlWithVariousEdmTypes()
     {
       return """
              <?xml version="1.0" encoding="utf-8"?>
-             <edmx:Edmx Version="4.0" 
+             <edmx:Edmx Version="4.0"
                   xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx"
                   xmlns="http://docs.oasis-open.org/odata/ns/edm">
                <edmx:DataServices>
