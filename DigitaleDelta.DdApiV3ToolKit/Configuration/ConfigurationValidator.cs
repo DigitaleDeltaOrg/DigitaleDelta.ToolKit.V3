@@ -629,7 +629,7 @@ $"""
 
             if (!pluginLoader.CanResolveType<IAuthorisation>(entry.AuthorisationHandler))
             {
-                LogError($"Fout in configuratie: ControllerAuthorization[{controller}].AuthorizationHandler '{entry.AuthorisationHandler}' kan niet worden geladen. Controleer de type-naam en zorg dat de plugin-assembly aanwezig is in '{pluginSettings.PluginDirectory}' of als referentie is opgenomen.");
+                LogError($"Fout in configuratie: ControllerAuthorization[{controller}].AuthorisationHandler '{entry.AuthorisationHandler}' kan niet worden geladen. Controleer de type-naam en zorg dat de plugin-assembly aanwezig is in '{pluginSettings.PluginDirectory}' of als referentie is opgenomen.");
             }
         }
     }
