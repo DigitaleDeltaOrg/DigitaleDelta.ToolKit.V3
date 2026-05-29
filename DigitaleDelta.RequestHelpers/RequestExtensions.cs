@@ -2,7 +2,6 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Net;
-using DigitaleDelta.Contracts;
 using DigitaleDelta.ErrorHandling;
 using DigitaleDelta.ODataTranslator;
 using DigitaleDelta.ODataTranslator.Helpers;
@@ -91,7 +90,7 @@ public static class RequestExtensions
 
                 if (!ODataFilter.TryParse(wrapped, out var filter, out var error) || filter == null)
                 {
-                    throw new ODataValidationException("Filter error", null, "InvalidFilter");
+                    throw new ODataValidationException($"Filter error: {error}", null, "InvalidFilter");
                 }
 
                 var validator = new ODataFilterValidator(propertyMaps, functionMaps);
@@ -104,7 +103,7 @@ public static class RequestExtensions
                 options.Filter = filter.Context;
             }
 
-            if (request.Query.TryGetValue("$orderby", out var _))
+            if (request.Query.TryGetValue("$orderby", out _))
             {
                 throw new ODataValidationException("Filter error", new Exception("$orderby is not supported."), "$orderby is not supported.");
             }
@@ -206,7 +205,7 @@ public static class RequestExtensions
         }
 
         /// <summary>
-        /// Translate query into header.
+        /// Translate the query into a header.
         /// </summary>
         /// <param name="httpContext">Current context</param>
         /// <param name="query">Query parameter name</param>
