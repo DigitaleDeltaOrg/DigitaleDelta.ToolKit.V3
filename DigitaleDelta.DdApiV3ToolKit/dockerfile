@@ -1,23 +1,45 @@
-﻿# Build stage
+# syntax=docker/dockerfile:1.7
+
+# ---- Build stage ----
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Kopieer alles zodat project references binnen de solution werken
+# Restore: copy sources and restore against the main project.
+# The toolkit has ~20 project references; copying everything once
+# is simpler than per-csproj layering and the .dockerignore keeps
+# the context small.
 COPY . .
 RUN dotnet restore "DigitaleDelta.DdApiV3ToolKit/DigitaleDelta.DdApiV3ToolKit.csproj"
-RUN dotnet publish "DigitaleDelta.DdApiV3ToolKit/DigitaleDelta.DdApiV3ToolKit.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Runtime stage (Linux)
+# Publish
+RUN dotnet publish "DigitaleDelta.DdApiV3ToolKit/DigitaleDelta.DdApiV3ToolKit.csproj" \
+    -c Release \
+    -o /app/publish \
+    --no-restore \
+    /p:UseAppHost=false
+
+# ---- Runtime stage (Debian 13 trixie via Microsoft's official image) ----
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-ENV ASPNETCORE_URLS=http://+:8080
+# curl is used by HEALTHCHECK and is handy for in-container debugging.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Run as the non-root user shipped by Microsoft's image
+USER $APP_UID
+
+ENV ASPNETCORE_URLS=http://+:8080 \
+    DOTNET_RUNNING_IN_CONTAINER=true \
+    DOTNET_EnableDiagnostics=0
 EXPOSE 8080
 
-# Publish output
 COPY --from=build /app/publish ./
-
-# Zorg dat verplichte configmap bestaat (ReadConfigurationFiles verwacht dit pad)
+# Default config files - operators override via volume mount on /app/ConfigurationFiles
 COPY --from=build /src/DigitaleDelta.DdApiV3ToolKit/ConfigurationFiles ./ConfigurationFiles
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
+    CMD curl -fsS http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "DigitaleDelta.DdApiV3ToolKit.dll"]

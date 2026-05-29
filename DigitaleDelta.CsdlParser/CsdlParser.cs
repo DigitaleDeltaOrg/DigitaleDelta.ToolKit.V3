@@ -12,7 +12,7 @@ namespace DigitaleDelta.CsdlParser;
 /// </summary>
 public static class CsdlParser
 {
-    
+
     /// <summary>
     /// Parses a CSDL (Common Schema Definition Language) string into a CsdlModel.
     /// </summary>
@@ -26,11 +26,11 @@ public static class CsdlParser
 
         try
         {
-            var xdoc = XDocument.Parse(csdl);
+            var xDocument = XDocument.Parse(csdl);
             XNamespace edmxNs = "http://docs.oasis-open.org/odata/ns/edmx";
             XNamespace edmNs = "http://docs.oasis-open.org/odata/ns/edm";
 
-            var schemas = xdoc.Root?.Element(edmxNs + "DataServices")?.Elements(edmNs + "Schema");
+            var schemas = xDocument.Root?.Element(edmxNs + "DataServices")?.Elements(edmNs + "Schema");
 
             if (schemas == null)
             {
@@ -43,11 +43,11 @@ public static class CsdlParser
             foreach (var schema in schemas)
             {
                 var entityContainerElement = schema.Element(edmNs + "EntityContainer");
-                
+
                 if (entityContainerElement != null)
                 {
                     var name = entityContainerElement.Attribute("Name")?.Value;
-                    
+
                     if (string.IsNullOrEmpty(name))
                     {
                         error = ErrorMessages.entityContainerNameIsRequired;
@@ -55,14 +55,14 @@ public static class CsdlParser
 
                         return false;
                     }
-                    
+
                     var entityContainer = new EntityContainer { Name = name };
 
                     foreach (var entitySetElement in entityContainerElement.Elements(edmNs + "EntitySet"))
                     {
                         var entitySetName = entitySetElement.Attribute("Name")?.Value;
                         var entityType = entitySetElement.Attribute("EntityType")?.Value;
-                        
+
                         if (string.IsNullOrEmpty(entitySetName))
                         {
                             error =  ErrorMessages.entitySetNameIsRequired;
@@ -70,7 +70,7 @@ public static class CsdlParser
 
                             return false;
                         }
-                        
+
                         if (string.IsNullOrEmpty(entityType))
                         {
                             error = ErrorMessages.entitySetEntityTypeIsRequired;
@@ -78,7 +78,7 @@ public static class CsdlParser
 
                             return false;
                         }
-                        
+
                         entityContainer.EntitySets.Add(new EntitySet
                         {
                             Name = entitySetName,
@@ -93,7 +93,7 @@ public static class CsdlParser
                 foreach (var entityTypeElement in schema.Elements(edmNs + "EntityType"))
                 {
                     var name = entityTypeElement.Attribute("Name")?.Value;
-                    
+
                     if (string.IsNullOrEmpty(name))
                     {
                        error = ErrorMessages.entityTypeNameIsRequired;
@@ -101,16 +101,16 @@ public static class CsdlParser
 
                        return false;
                     }
-                    
+
                     var entityType = new EntityType { Name = name };
                     var keyElement = entityTypeElement.Element(edmNs + "Key");
-                    
+
                     if (keyElement != null)
                     {
                         foreach (var propertyRef in keyElement.Elements(edmNs + "PropertyRef"))
                         {
                             var value = propertyRef.Attribute("Name")?.Value;
-                            
+
                             if (!string.IsNullOrEmpty(value))
                             {
                                 entityType.Keys.Add(value);
@@ -121,7 +121,7 @@ public static class CsdlParser
                     foreach (var propertyElement in entityTypeElement.Elements(edmNs + "Property"))
                     {
                         var rawType = propertyElement.Attribute("Type")?.Value;
-                        
+
                         if (string.IsNullOrEmpty(rawType))
                         {
                            error = string.Format(ErrorMessages.propertyTypeIsRequiredForEntityType, name);
@@ -129,9 +129,9 @@ public static class CsdlParser
 
                            return false;
                         }
-                        
+
                         var rawName = propertyElement.Attribute("Name")?.Value;
-                        
+
                         if (string.IsNullOrEmpty(rawName))
                         {
                             error = string.Format(ErrorMessages.propertyNameIsRequiredForEntityType, name);
@@ -139,7 +139,7 @@ public static class CsdlParser
 
                             return false;
                         }
-                        
+
                         entityType.Properties.Add(new Property
                         {
                             Name = propertyElement.Attribute("Name")?.Value ?? string.Empty,
@@ -160,7 +160,7 @@ public static class CsdlParser
                 foreach (var complexTypeElement in schema.Elements(edmNs + "ComplexType"))
                 {
                     var name = complexTypeElement.Attribute("Name")?.Value;
-                    
+
                     if (string.IsNullOrEmpty(name))
                     {
                        error = ErrorMessages.complexTypeNameIsRequired;
@@ -168,13 +168,13 @@ public static class CsdlParser
 
                        return false;
                     }
-                    
+
                     var complexType = new ComplexType { Name = name };
 
                     foreach (var propertyElement in complexTypeElement.Elements(edmNs + "Property"))
                     {
                         var propertyName = propertyElement.Attribute("Name")?.Value;
-                        
+
                         if (string.IsNullOrEmpty(propertyName))
                         {
                            error = string.Format(ErrorMessages.propertyNameIsRequiredForComplexType, name);
@@ -182,9 +182,9 @@ public static class CsdlParser
 
                            return false;
                         }
-                        
+
                         var propertyType = propertyElement.Attribute("Type")?.Value;
-                        
+
                         if (string.IsNullOrEmpty(propertyType))
                         {
                            error = string.Format(ErrorMessages.propertyTypeIsRequiredForPropertyInComplexType, propertyName, name);
@@ -214,7 +214,7 @@ public static class CsdlParser
                 {
                     var functionName = functionElement.Attribute("Name")?.Value;
                     var returnType = functionElement.Element(edmNs + "ReturnType")?.Attribute("Type")?.Value;
-                    
+
                     if (string.IsNullOrEmpty(functionName))
                     {
                        error = ErrorMessages.functionNameIsRequired;
@@ -222,7 +222,7 @@ public static class CsdlParser
 
                        return false;
                     }
-                    
+
                     if (string.IsNullOrEmpty(returnType))
                     {
                        error = string.Format(ErrorMessages.functionReturnTypeIsRequired, functionName);
@@ -230,7 +230,7 @@ public static class CsdlParser
 
                        return false;
                     }
-                    
+
                     var function = new Function
                     {
                         Name = functionName,
@@ -242,12 +242,12 @@ public static class CsdlParser
                     {
                         var parameterName = parameterElement.el.Attribute("Name")?.Value;
                         var parameterType = parameterElement.el.Attribute("Type")?.Value;
-                        
+
                         if (string.IsNullOrEmpty(parameterName))
                         {
                             parameterName = $"param{parameterElement.idx + 1}";
                         }
-                        
+
                         if (string.IsNullOrEmpty(parameterType))
                         {
                            error = string.Format(ErrorMessages.parameterTypeIsRequiredForParameterInFunction, parameterName, functionName);
@@ -255,7 +255,7 @@ public static class CsdlParser
 
                            return false;
                         }
-                        
+
                         function.Parameters.Add(new Parameter
                         {
                             Name = parameterName,
@@ -352,11 +352,14 @@ public static class CsdlParser
 
         // Extract the type name (without namespace)
         var typeName = cleanType;
-        if (cleanType.Contains('.'))
+        if (!cleanType.Contains('.'))
         {
-            var parts = cleanType.Split('.');
-            typeName = parts[parts.Length - 1];
+            return complexTypeNames.Contains(typeName);
         }
+
+        var parts = cleanType.Split('.');
+
+        typeName = parts[^1];
 
         return complexTypeNames.Contains(typeName);
     }
@@ -370,27 +373,27 @@ public static class CsdlParser
     {
         return rawType switch
                {
-                   "Edm.String" => EdmType.EdmString, 
-                   "Edm.Int32" => EdmType.EdmInt32, 
-                   "Edm.Boolean" => EdmType.EdmBoolean, 
-                   "Edm.DateTimeOffset" => EdmType.EdmDateTimeOffset, 
-                   "Edm.Double" => EdmType.EdmDouble, 
-                   "Edm.Guid" => EdmType.EdmGuid, 
-                   "Edm.Binary" => EdmType.EdmBinary, 
-                   "Edm.Geography" => EdmType.EdmGeography, 
-                   "Edm.GeographyPoint" => EdmType.EdmGeographyPoint, 
-                   "Edm.GeographyLineString" => EdmType.EdmGeographyLineString, 
-                   "Edm.GeographyPolygon" => EdmType.EdmGeographyPolygon, 
-                   "Edm.GeographyMultiPoint" => EdmType.EdmGeographyMultiPoint, 
-                   "Edm.GeographyMultiLineString" => EdmType.EdmGeographyMultiLineString, 
-                   "Edm.GeographyMultiPolygon" => EdmType.EdmGeographyMultiPolygon, 
-                   "Edm.Geometry" => EdmType.EdmGeometry, 
-                   "Edm.GeometryPoint" => EdmType.EdmGeometryPoint, 
-                   "Edm.GeometryLineString" => EdmType.EdmGeometryLineString, 
-                   "Edm.GeometryPolygon" => EdmType.EdmGeometryPolygon, 
-                   "Edm.GeometryMultiPoint" => EdmType.EdmGeometryMultiPoint, 
-                   "Edm.GeometryMultiLineString" => EdmType.EdmGeometryMultiLineString, 
-                   "Edm.GeometryMultiPolygon" => EdmType.EdmGeometryMultiPolygon, 
+                   "Edm.String" => EdmType.EdmString,
+                   "Edm.Int32" => EdmType.EdmInt32,
+                   "Edm.Boolean" => EdmType.EdmBoolean,
+                   "Edm.DateTimeOffset" => EdmType.EdmDateTimeOffset,
+                   "Edm.Double" => EdmType.EdmDouble,
+                   "Edm.Guid" => EdmType.EdmGuid,
+                   "Edm.Binary" => EdmType.EdmBinary,
+                   "Edm.Geography" => EdmType.EdmGeography,
+                   "Edm.GeographyPoint" => EdmType.EdmGeographyPoint,
+                   "Edm.GeographyLineString" => EdmType.EdmGeographyLineString,
+                   "Edm.GeographyPolygon" => EdmType.EdmGeographyPolygon,
+                   "Edm.GeographyMultiPoint" => EdmType.EdmGeographyMultiPoint,
+                   "Edm.GeographyMultiLineString" => EdmType.EdmGeographyMultiLineString,
+                   "Edm.GeographyMultiPolygon" => EdmType.EdmGeographyMultiPolygon,
+                   "Edm.Geometry" => EdmType.EdmGeometry,
+                   "Edm.GeometryPoint" => EdmType.EdmGeometryPoint,
+                   "Edm.GeometryLineString" => EdmType.EdmGeometryLineString,
+                   "Edm.GeometryPolygon" => EdmType.EdmGeometryPolygon,
+                   "Edm.GeometryMultiPoint" => EdmType.EdmGeometryMultiPoint,
+                   "Edm.GeometryMultiLineString" => EdmType.EdmGeometryMultiLineString,
+                   "Edm.GeometryMultiPolygon" => EdmType.EdmGeometryMultiPolygon,
                    _ => EdmType.EdmUnknown
                };
     }

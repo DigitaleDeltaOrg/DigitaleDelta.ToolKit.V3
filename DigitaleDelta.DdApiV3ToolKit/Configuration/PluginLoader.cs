@@ -52,6 +52,52 @@ public class PluginLoader(PluginSettings settings)
     /// <summary>
     /// Finds and creates an instance of the specified type from configured settings or loaded plugins.
     /// </summary>
+    /// <summary>
+    /// Checks whether a type implementing <typeparamref name="T"/> can be resolved from the configured
+    /// type name or any loaded plugin assembly. Does not instantiate the type.
+    /// </summary>
+    /// <typeparam name="T">The interface type to look for.</typeparam>
+    /// <param name="configuredTypeName">The configured type name (e.g. "Namespace.Class, Assembly").</param>
+    /// <returns>True if a matching type is found; otherwise false.</returns>
+    public bool CanResolveType<T>(string? configuredTypeName) where T : class
+    {
+        if (string.IsNullOrWhiteSpace(configuredTypeName))
+        {
+            return false;
+        }
+
+        var direct = Type.GetType(configuredTypeName);
+
+        if (direct != null && typeof(T).IsAssignableFrom(direct) && direct is { IsClass: true, IsAbstract: false })
+        {
+            return true;
+        }
+
+        var interfaceType = typeof(T);
+
+        foreach (var assembly in _loadedAssemblies)
+        {
+            try
+            {
+                var match = assembly.GetTypes()
+                    .Any(t => t.IsClass && !t.IsAbstract && interfaceType.IsAssignableFrom(t) &&
+                              (string.Equals(t.FullName, configuredTypeName, StringComparison.Ordinal) ||
+                               string.Equals($"{t.FullName}, {assembly.GetName().Name}", configuredTypeName, StringComparison.Ordinal)));
+
+                if (match)
+                {
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to inspect assembly {AssemblyName} while resolving type {TypeName}", assembly.FullName, configuredTypeName);
+            }
+        }
+
+        return false;
+    }
+
     /// <typeparam name="T">The interface type to find.</typeparam>
     /// <param name="configuredTypeName">The configured type name from settings.</param>
     /// <param name="serviceProvider">Service provider for dependency injection.</param>

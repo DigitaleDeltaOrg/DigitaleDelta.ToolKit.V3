@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using DigitaleDelta.Authentication;
 using DigitaleDelta.Contracts;
 using DigitaleDelta.Contracts.Configuration;
+using DigitaleDelta.QueryService;
 using Serilog;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -81,6 +82,7 @@ public static class ConfigurationValidator
             ValidateStringWithMinimalLength(builder.Configuration, "TokenSecret", 32);
             ValidateTokenAlgorithm(builder.Configuration);
             ValidateAuthenticationConfiguration(builder.Configuration);
+            ValidateControllerAuthorisation(builder.Configuration);
             ValidateSection(builder.Configuration, referenceConfiguration);
             ValidateSection(builder.Configuration, observationConfiguration);
             _contextDefinitions = GetDefinitions(builder.Configuration.GetValue<string>(contextDefinitionsName), contextDefinitionsName);
@@ -575,6 +577,60 @@ $"""
             default:
                 LogError("Ongeldige AuthenticatieType");
                 break;
+        }
+    }
+
+    /// <summary>
+    /// Validates the per-controller authorisation configuration. Ensures every required controller
+    /// has an entry, the AuthenticationType is recognised, and (when not None) the configured
+    /// authorisation plugin can be resolved from referenced assemblies or the plugin directory.
+    /// </summary>
+    /// <param name="configuration"></param>
+    private static void ValidateControllerAuthorisation(IConfiguration configuration)
+    {
+        var requiredControllers = new[] { "ObservationController", "ReferenceController" };
+        var entries = new Dictionary<string, ControllerAuthorisationEntry>(StringComparer.OrdinalIgnoreCase);
+        configuration.GetSection("ControllerAuthorization").Bind(entries);
+
+        if (entries.Count == 0)
+        {
+            LogError("Fout in configuratie: De sectie 'ControllerAuthorization' ontbreekt of is leeg.");
+            return;
+        }
+
+        foreach (var required in requiredControllers.Where(required => !entries.ContainsKey(required)))
+        {
+            LogError($"Fout in configuratie: ControllerAuthorization mist een entry voor '{required}'.");
+        }
+
+        var pluginSettings = new PluginSettings();
+        configuration.GetSection("PluginSettings").Bind(pluginSettings);
+        var pluginLoader = new PluginLoader(pluginSettings);
+        pluginLoader.LoadPlugins();
+
+        foreach (var (controller, entry) in entries)
+        {
+            if (!Enum.TryParse<AuthenticationType>(entry.AuthenticationType, ignoreCase: true, out var parsed))
+            {
+                LogError($"Fout in configuratie: ControllerAuthorization[{controller}].AuthenticationType '{entry.AuthenticationType}' is ongeldig. Geldige waarden: {string.Join(", ", Enum.GetNames<AuthenticationType>())}.");
+                continue;
+            }
+
+            if (parsed == AuthenticationType.None)
+            {
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(entry.AuthorisationHandler))
+            {
+                LogError($"Fout in configuratie: ControllerAuthorization[{controller}].AuthorizationHandler is vereist wanneer AuthenticationType '{entry.AuthenticationType}' is.");
+                continue;
+            }
+
+            if (!pluginLoader.CanResolveType<IAuthorisation>(entry.AuthorisationHandler))
+            {
+                LogError($"Fout in configuratie: ControllerAuthorization[{controller}].AuthorizationHandler '{entry.AuthorisationHandler}' kan niet worden geladen. Controleer de type-naam en zorg dat de plugin-assembly aanwezig is in '{pluginSettings.PluginDirectory}' of als referentie is opgenomen.");
+            }
         }
     }
 
