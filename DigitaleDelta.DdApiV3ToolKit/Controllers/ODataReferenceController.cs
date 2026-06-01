@@ -6,7 +6,6 @@ using DigitaleDelta.DdApiV3ToolKit.Configuration;
 using DigitaleDelta.ODataTranslator;
 using DigitaleDelta.QueryService;
 using DigitaleDelta.RequestHelpers;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
@@ -25,7 +24,6 @@ namespace DigitaleDelta.DdApiV3ToolKit.Controllers;
 /// </remarks>
 [Route("v3/odata/references")]
 [ApiController]
-[AllowAnonymous]
 [EnableRateLimiting("ReferenceController")]
 public class ODataReferenceController : ControllerBase
 {
