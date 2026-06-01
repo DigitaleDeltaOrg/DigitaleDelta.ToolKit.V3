@@ -4,7 +4,7 @@
 namespace DigitaleDelta.DdApiV3ToolKit.Configuration;
 
 /// <summary>
-/// Per-controller authorisation configuration. Keyed by controller name (e.g. "ObservationController").
+/// Per-controller authorisation configuration. Keyed by full controller class name (e.g. "ODataObservationController").
 /// </summary>
 public class ControllerAuthorisationEntry
 {

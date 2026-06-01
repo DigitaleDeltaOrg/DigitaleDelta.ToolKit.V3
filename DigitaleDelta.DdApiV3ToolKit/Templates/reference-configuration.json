@@ -42,6 +42,14 @@
         "Query": "Geography",
         "EdmType": "Edm.Geography",
         "ColumnName": "geography"
+      },
+      {
+        "ODataPropertyName": "InternalId",
+        "Query": "internal_id",
+        "EdmType": "Edm.Int32",
+        "ColumnName": "internal_id",
+        "ExcludeFromResponse": true,
+        "DisallowInFilter": true
       }
     ],
     "FunctionMapping": [

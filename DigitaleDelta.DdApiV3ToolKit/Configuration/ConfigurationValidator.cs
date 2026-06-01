@@ -471,7 +471,9 @@ $"""
     }
 
     /// <summary>
-    /// Validates that the IdField is configured for the specified section.
+    /// Validates that the IdField is configured for the specified section and that it is mapped in PropertyMapping.
+    /// The IdField is used for skiptoken pagination and must resolve to a known ColumnName (or ODataPropertyName fallback)
+    /// so that the correct EdmType is applied when comparing against @lastId in the generated SQL.
     /// </summary>
     /// <param name="configuration"></param>
     /// <param name="sectionName"></param>
@@ -482,6 +484,19 @@ $"""
         if (string.IsNullOrWhiteSpace(idField))
         {
             LogError($"Fout in configuratie: IdField is vereist in {sectionName}.");
+            return;
+        }
+
+        var maps = GetPropertyMaps(configuration, $"{sectionName}:{propertyMapping}");
+        var hasMatch = maps.Any(m =>
+            string.Equals(m.ColumnName, idField, StringComparison.OrdinalIgnoreCase)
+            || (string.IsNullOrWhiteSpace(m.ColumnName) && string.Equals(m.ODataPropertyName, idField, StringComparison.OrdinalIgnoreCase)));
+
+        if (!hasMatch)
+        {
+            LogError($"Fout in configuratie: IdField '{idField}' in {sectionName} komt niet voor als ColumnName in {sectionName}:{propertyMapping}. " +
+                     "Voeg een PropertyMapping-entry toe met deze ColumnName (en het juiste EdmType, bijv. Edm.Int32 voor een numerieke id-kolom). " +
+                     "Zonder deze mapping faalt skiptoken-paginering met een type-mismatch in de database.");
         }
     }
 
@@ -588,7 +603,7 @@ $"""
     /// <param name="configuration"></param>
     private static void ValidateControllerAuthorisation(IConfiguration configuration)
     {
-        var requiredControllers = new[] { "ObservationController", "ReferenceController" };
+        var requiredControllers = new[] { "ODataObservationController", "ODataReferenceController" };
         var entries = new Dictionary<string, ControllerAuthorisationEntry>(StringComparer.OrdinalIgnoreCase);
         configuration.GetSection("ControllerAuthorization").Bind(entries);
 

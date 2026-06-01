@@ -41,7 +41,7 @@ public class ODataReferenceController : ControllerBase
     /// API Route: "v3/odata/references"
     /// Rate Limiting: Enabled via "ReferenceController" policy
     /// </summary>
-    public ODataReferenceController(BaseParameters baseParameters, [FromKeyedServices("ReferenceQueryServiceParameters")] ODataQueryServiceParameters oDataQueryServiceParameters, ILogger<ODataReferenceController> logger, IMemoryCache memoryCache, IRequestLogger requestLogger, [FromKeyedServices("ReferenceController")] IAuthorisation authorisationService)
+    public ODataReferenceController(BaseParameters baseParameters, [FromKeyedServices("ReferenceQueryServiceParameters")] ODataQueryServiceParameters oDataQueryServiceParameters, ILogger<ODataReferenceController> logger, IMemoryCache memoryCache, IRequestLogger requestLogger, [FromKeyedServices("ODataReferenceController")] IAuthorisation authorisationService)
     {
         ArgumentNullException.ThrowIfNull(oDataQueryServiceParameters);
         ArgumentNullException.ThrowIfNull(logger);

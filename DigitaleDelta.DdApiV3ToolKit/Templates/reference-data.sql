@@ -1,4 +1,5 @@
 select
+    internal_id,
     id,
     code,
     description as name,

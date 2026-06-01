@@ -37,7 +37,7 @@ public class ODataObservationController : ControllerBase
     /// This controller is configured to handle requests routed to "v3/odata/observations".
     /// It integrates functionalities for rate limiting, logging, caching, and authorisation.
     /// </remarks>
-    public ODataObservationController(BaseParameters baseParameters, [FromKeyedServices("ObservationQueryServiceParameters")] ODataQueryServiceParameters oDataQueryServiceParameters, ILogger<ODataObservationController> logger, IMemoryCache memoryCache, IRequestLogger requestLogger, [FromKeyedServices("ObservationController")] IAuthorisation authorisationService)
+    public ODataObservationController(BaseParameters baseParameters, [FromKeyedServices("ObservationQueryServiceParameters")] ODataQueryServiceParameters oDataQueryServiceParameters, ILogger<ODataObservationController> logger, IMemoryCache memoryCache, IRequestLogger requestLogger, [FromKeyedServices("ODataObservationController")] IAuthorisation authorisationService)
     {
         ArgumentNullException.ThrowIfNull(oDataQueryServiceParameters);
         ArgumentNullException.ThrowIfNull(logger);
