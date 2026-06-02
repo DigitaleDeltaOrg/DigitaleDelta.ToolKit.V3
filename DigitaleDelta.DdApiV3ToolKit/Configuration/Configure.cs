@@ -23,7 +23,6 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Data.Sqlite;
 using MySql.Data.MySqlClient;
 using Npgsql;
-using Oracle.ManagedDataAccess.Client;
 using Serilog;
 using IPNetwork = System.Net.IPNetwork;
 
@@ -233,7 +232,6 @@ public static class Configure
                 "SqlServer" => new SqlConnection(connectionString),
                 "Postgres" => new NpgsqlConnection(connectionString),
                 "MySql" => new MySqlConnection(connectionString),
-                "Oracle" => new OracleConnection(connectionString),
                 "Sqlite" => new SqliteConnection(connectionString),
                 _ => throw new Exception($"Database engine {databaseEngine} is not supported. Supported: SqlServer, Postgres, MySql, Oracle, Sqlite.")
             };

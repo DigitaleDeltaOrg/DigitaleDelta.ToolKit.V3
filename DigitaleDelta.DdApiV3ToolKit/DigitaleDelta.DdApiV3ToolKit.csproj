@@ -24,7 +24,6 @@
         <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
         <PackageReference Include="MySql.Data" Version="9.7.0" />
         <PackageReference Include="Npgsql" Version="10.0.2" />
-        <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.200" />
         <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8" />
         <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
         <PackageReference Include="Serilog.Enrichers.AspNetCore" Version="1.0.0" />
@@ -38,7 +37,6 @@
         <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
         <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
-        <PackageReference Include="Serilog.Sinks.Elasticsearch" Version="10.0.0" />
         <PackageReference Include="Serilog.Sinks.EventLog" Version="4.0.0" />
         <PackageReference Include="Serilog.Sinks.Exceptionless" Version="5.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
@@ -92,7 +90,7 @@
     <PropertyGroup>
       <SatelliteResourceLanguages>en;nl</SatelliteResourceLanguages>
     </PropertyGroup>
-  
+
     <ItemGroup>
       <Content Update="ConfigurationFiles/**/*">
         <CopyToOutputDirectory>Never</CopyToOutputDirectory>
