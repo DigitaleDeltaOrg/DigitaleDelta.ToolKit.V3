@@ -49,8 +49,8 @@ public static class DbRowMaterializer
         int lineCount,
         ILogger logger,
         int? targetSrid = null,
-        CancellationToken cancellationToken = default,
-        IReadOnlySet<string>? excludeProperties = null)
+        IReadOnlySet<string>? excludeProperties = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(reader);
         ArgumentNullException.ThrowIfNull(fieldMaps);
