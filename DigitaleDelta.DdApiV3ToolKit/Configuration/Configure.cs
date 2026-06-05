@@ -58,7 +58,7 @@ public static class Configure
         // Some parameters will not be picked up with a hot reload, but those will not change often.
         // For query changes, always start the app again instead of relying on hot reload.
         builder.Services.AddKeyedSingleton("ObservationQueryServiceParameters", builder.GetQueryServiceParameters("ObservationConfiguration", "observations", databaseConnectionFactory));
-        builder.Services.AddKeyedSingleton("ReferenceQueryServiceParameters", builder.GetQueryServiceParameters("ReferenceConfiguration", "observations", databaseConnectionFactory));
+        builder.Services.AddKeyedSingleton("ReferenceQueryServiceParameters", builder.GetQueryServiceParameters("ReferenceConfiguration", "references", databaseConnectionFactory));
         builder.Services.ConfigureRateLimiting(builder.Configuration);
         builder.Services.Configure<KestrelServerOptions>(options =>
         {
