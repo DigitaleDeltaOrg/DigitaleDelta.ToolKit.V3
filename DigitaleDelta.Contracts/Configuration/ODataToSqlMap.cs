@@ -61,4 +61,14 @@ public record ODataToSqlMap
     /// If set to true, the specified property is required in the filtering criteria.
     /// </summary>
     public bool RequireInFilter { init; get; } = false;
+
+    /// <summary>
+    /// Optional presentation hint for response serialisation. Independent of <see cref="EdmType"/>,
+    /// which continues to drive OData type semantics (filtering, CSDL, OpenAPI).
+    /// Currently recognised values:
+    /// <list type="bullet">
+    /// <item><description><c>"Json"</c> — the column already contains valid JSON (e.g. PostgreSQL <c>jsonb</c>) and should be emitted verbatim as a nested object rather than as an escaped string.</description></item>
+    /// </list>
+    /// </summary>
+    public string? RenderAs { get; init; }
 }

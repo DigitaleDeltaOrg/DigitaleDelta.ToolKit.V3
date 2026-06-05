@@ -34,6 +34,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\DigitaleDelta.Contracts\DigitaleDelta.Contracts.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="GeoAPI.Core" Version="1.7.5" />
       <PackageReference Include="NetTopologySuite" Version="2.6.0" />
       <PackageReference Include="NetTopologySuite.Features" Version="2.2.0" />

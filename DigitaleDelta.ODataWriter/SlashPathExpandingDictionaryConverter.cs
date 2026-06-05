@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using DigitaleDelta.Contracts;
 
 namespace DigitaleDelta.ODataWriter;
 
@@ -153,17 +154,21 @@ public sealed class SlashPathExpandingDictionaryConverter : JsonConverter<Dictio
                 case null:
                     writer.WriteNullValue();
                     break;
-                
+
+                case RawJson raw:
+                    writer.WriteRawValue(raw.Json);
+                    break;
+
                 case Dictionary<string, object?> dict:
                     writer.WriteStartObject();
-                    foreach (var kv in dict) 
+                    foreach (var kv in dict)
                     {
                         writer.WritePropertyName(kv.Key);
                         WriteValue(writer, kv.Value, options);
                     }
                     writer.WriteEndObject();
                     break;
-                
+
                 case IEnumerable<object?> list when v is not string:
                     writer.WriteStartArray();
                     

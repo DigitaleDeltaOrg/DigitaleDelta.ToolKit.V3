@@ -1,4 +1,5 @@
 ﻿using System.Data.Common;
+using DigitaleDelta.Contracts;
 using DigitaleDelta.Contracts.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -143,6 +144,73 @@ public class DbRowMaterializerTests
         Assert.True(result[0].ContainsKey("I"));
         Assert.True(result[1].ContainsKey("S"));
         Assert.False(result[1].ContainsKey("I"));
+    }
+
+    [Fact]
+    public async Task MaterializeToListAsync_RenderAsJson_WrapsValueInRawJson()
+    {
+        var reader = new TestDataReader(("payload", typeof(string)));
+        reader.AddRow("{\"a\":1,\"b\":[2,3]}");
+        var logger = Mock.Of<ILogger>();
+
+        var map = new ODataToSqlMap
+        {
+            ODataPropertyName = "Payload",
+            Query = "payload",
+            EdmType = "Edm.String",
+            ColumnName = "payload",
+            RenderAs = "Json"
+        };
+        var maps = new[] { map }.ToDictionary(a => a.ODataPropertyName);
+
+        var result = await DbRowMaterializer.MaterializeToListAsync(reader, maps, suppressNulls: false, 1, logger, null);
+
+        var value = Assert.IsType<RawJson>(result[0]["Payload"]);
+        Assert.Equal("{\"a\":1,\"b\":[2,3]}", value.Json);
+    }
+
+    [Fact]
+    public async Task MaterializeToListAsync_RenderAsJson_TreatsWhitespaceAsNull()
+    {
+        var reader = new TestDataReader(("payload", typeof(string)));
+        reader.AddRow("   ");
+        var logger = Mock.Of<ILogger>();
+
+        var map = new ODataToSqlMap
+        {
+            ODataPropertyName = "Payload",
+            Query = "payload",
+            EdmType = "Edm.String",
+            ColumnName = "payload",
+            RenderAs = "Json"
+        };
+        var maps = new[] { map }.ToDictionary(a => a.ODataPropertyName);
+
+        var result = await DbRowMaterializer.MaterializeToListAsync(reader, maps, suppressNulls: false, 1, logger, null);
+
+        Assert.Null(result[0]["Payload"]);
+    }
+
+    [Fact]
+    public async Task MaterializeToListAsync_RenderAsJson_IsCaseInsensitive()
+    {
+        var reader = new TestDataReader(("payload", typeof(string)));
+        reader.AddRow("{\"x\":true}");
+        var logger = Mock.Of<ILogger>();
+
+        var map = new ODataToSqlMap
+        {
+            ODataPropertyName = "Payload",
+            Query = "payload",
+            EdmType = "Edm.String",
+            ColumnName = "payload",
+            RenderAs = "json"
+        };
+        var maps = new[] { map }.ToDictionary(a => a.ODataPropertyName);
+
+        var result = await DbRowMaterializer.MaterializeToListAsync(reader, maps, suppressNulls: false, 1, logger, null);
+
+        Assert.IsType<RawJson>(result[0]["Payload"]);
     }
 
     [Fact]

@@ -417,6 +417,12 @@ $"""
     }
 
     /// <summary>
+    /// The set of recognised <see cref="ODataToSqlMap.RenderAs"/> values. Configuration is rejected
+    /// when a value outside this set is specified.
+    /// </summary>
+    private static readonly HashSet<string> _supportedRenderAs = new(StringComparer.OrdinalIgnoreCase) { "Json" };
+
+    /// <summary>
     /// Validates a single property mapping item.
     /// </summary>
     /// <param name="item"></param>
@@ -439,6 +445,11 @@ $"""
         if (!string.IsNullOrWhiteSpace(item.WhereClausePart))
         {
             ValidateSqlFragment(item.WhereClausePart, $"{propertyMapping}.WhereClausePart ({item.ODataPropertyName})");
+        }
+
+        if (!string.IsNullOrWhiteSpace(item.RenderAs) && !_supportedRenderAs.Contains(item.RenderAs.Trim()))
+        {
+            LogError($"Fout in configuratie: RenderAs '{item.RenderAs}' is niet ondersteund voor '{item.ODataPropertyName}'. Geldige waarden: {string.Join(", ", _supportedRenderAs)}.");
         }
     }
 

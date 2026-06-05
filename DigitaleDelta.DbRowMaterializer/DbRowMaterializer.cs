@@ -1,4 +1,5 @@
-﻿using DigitaleDelta.Contracts.Configuration;
+﻿using DigitaleDelta.Contracts;
+using DigitaleDelta.Contracts.Configuration;
 using Microsoft.Extensions.Logging;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
@@ -28,6 +29,14 @@ public static class DbRowMaterializer
         geography,
         fallbackString
     }
+
+    private enum RenderKind : byte
+    {
+        @default,
+        json
+    }
+
+    private const string renderAsJson = "json";
 
     /// <summary>
     /// Reads rows from the given <see cref="DbDataReader"/> and maps them to a list of dictionaries
@@ -127,6 +136,13 @@ public static class DbRowMaterializer
         if (r.IsDBNull(ord))
         {
             return null;
+        }
+
+        if (spec.Render == RenderKind.json)
+        {
+            var raw = r.GetValue(ord) as string;
+
+            return string.IsNullOrWhiteSpace(raw) ? null : new RawJson(raw);
         }
 
         switch (spec.Kind)
@@ -241,9 +257,10 @@ public static class DbRowMaterializer
             }
 
             var kind = MapEdmToKind(fm.EdmType);
+            var render = MapRenderAs(fm.RenderAs);
 
             tempPaths.Add(oDataPropertyName);
-            tempSpecs.Add(new ColSpec(ord, kind));
+            tempSpecs.Add(new ColSpec(ord, kind, render));
         }
     }
 
@@ -268,12 +285,32 @@ public static class DbRowMaterializer
 
     /// <summary>
     /// Represents a column specification for database query result mapping.
-    /// Defines the ordinal position of the column and its associated data type.
+    /// Defines the ordinal position of the column, its associated data type, and an optional
+    /// presentation hint that overrides the default response rendering for the column.
     /// </summary>
-    private readonly struct ColSpec(int ordinal, ColKind kind)
+    private readonly struct ColSpec(int ordinal, ColKind kind, RenderKind render)
     {
-        public readonly int     Ordinal = ordinal;
-        public readonly ColKind Kind    = kind;
+        public readonly int        Ordinal = ordinal;
+        public readonly ColKind    Kind    = kind;
+        public readonly RenderKind Render  = render;
+    }
+
+    /// <summary>
+    /// Maps the optional <c>RenderAs</c> hint from a property mapping to the internal render-kind enumeration.
+    /// </summary>
+    /// <param name="renderAs">The raw <c>RenderAs</c> string from configuration, or <c>null</c> if absent.</param>
+    /// <returns><see cref="RenderKind.json"/> when the hint requests JSON rendering; <see cref="RenderKind.@default"/> otherwise.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static RenderKind MapRenderAs(string? renderAs)
+    {
+        if (string.IsNullOrWhiteSpace(renderAs))
+        {
+            return RenderKind.@default;
+        }
+
+        return string.Equals(renderAs.Trim(), renderAsJson, StringComparison.OrdinalIgnoreCase)
+            ? RenderKind.json
+            : RenderKind.@default;
     }
 
     /// <summary>
