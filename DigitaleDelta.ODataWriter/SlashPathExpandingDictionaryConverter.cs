@@ -17,7 +17,7 @@ public sealed class SlashPathExpandingDictionaryConverter : JsonConverter<Dictio
     /// slash-separated paths during serialization in the
     /// <see cref="SlashPathExpandingDictionaryConverter"/>.
     /// </summary>
-    private static readonly ConcurrentDictionary<string, string[]> PathCache = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, string[]> _pathCache = new(StringComparer.Ordinal);
 
     /// <summary>
     /// Reads a JSON representation of a Dictionary&lt;string, object?&gt;
@@ -29,6 +29,9 @@ public sealed class SlashPathExpandingDictionaryConverter : JsonConverter<Dictio
     /// <returns>Throws a NotSupportedException, as reading functionality is not implemented.</returns>
     /// <exception cref="NotSupportedException">Always thrown because reading is not supported by this converter.</exception>
     public override Dictionary<string, object?> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => throw new NotSupportedException("Reading not supported.");
+
+    private const int leafSize = 16;
+    private const int nodeCount = 5;
 
     /// <summary>
     /// Writes a Dictionary&lt;string, object?&gt; to a JSON writer, expanding keys that represent slash-separated paths
@@ -42,10 +45,10 @@ public sealed class SlashPathExpandingDictionaryConverter : JsonConverter<Dictio
         writer.WriteStartObject();
 
         var root = new Node();
-        
+
         foreach (var (key, val) in value)
         {
-            var parts = PathCache.GetOrAdd(key, k => k.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+            var parts = _pathCache.GetOrAdd(key, k => k.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
             var node = root;
 
             for (var i = 0; i < parts.Length - 1; i++)
@@ -86,16 +89,16 @@ public sealed class SlashPathExpandingDictionaryConverter : JsonConverter<Dictio
         /// <returns>The existing or newly created child node associated with the specified name.</returns>
         public Node GetOrAddChild(string name)
         {
-            _children ??= new Dictionary<string, Node>(4, StringComparer.Ordinal);
-            
+            _children ??= new Dictionary<string, Node>(nodeCount, StringComparer.Ordinal);
+
             if (_children.TryGetValue(name, out var child))
             {
                 return child;
             }
-            
+
             child = new Node();
             _children[name] = child;
-            (_order ??= new List<Entry>(4)).Add(new Entry(isChild: true, name, child, null));
+            (_order ??= new List<Entry>(leafSize)).Add(new Entry(isChild: true, name, child, null));
 
             return child;
         }
@@ -107,7 +110,7 @@ public sealed class SlashPathExpandingDictionaryConverter : JsonConverter<Dictio
         /// <param name="value">The value associated with the leaf node.</param>
         public void AddLeaf(string name, object? value)
         {
-            (_order ??= new List<Entry>(4)).Add(new Entry(isChild: false, name, null, value));
+            (_order ??= new List<Entry>(leafSize)).Add(new Entry(isChild: false, name, null, value));
         }
 
         /// <summary>
@@ -171,15 +174,15 @@ public sealed class SlashPathExpandingDictionaryConverter : JsonConverter<Dictio
 
                 case IEnumerable<object?> list when v is not string:
                     writer.WriteStartArray();
-                    
+
                     foreach (var item in list)
                     {
                         WriteValue(writer, item, options);
                     }
-                    
+
                     writer.WriteEndArray();
                     break;
-                
+
                 default:
                     JsonSerializer.Serialize(writer, v, v.GetType(), options);
                     break;
