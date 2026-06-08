@@ -38,11 +38,9 @@
         <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
         <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
         <PackageReference Include="Serilog.Sinks.EventLog" Version="4.0.0" />
-        <PackageReference Include="Serilog.Sinks.Exceptionless" Version="5.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
         <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="10.0.0" />
         <PackageReference Include="Serilog.Sinks.Sentry" Version="2.4.3" />
-        <PackageReference Include="Serilog.Sinks.Splunk" Version="5.2.0" />
         <PackageReference Include="SwashBuckle.AspNetCore.MicrosoftExtensions" Version="0.5.0" />
         <PackageReference Include="YamlDotNet" Version="18.0.0" />
     </ItemGroup>
