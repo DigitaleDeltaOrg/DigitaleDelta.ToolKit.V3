@@ -196,6 +196,26 @@ public class ODataToSqlConverterTests
         Assert.Equal("name = @p1", sqlResult);
     }
 
+    [Theory]
+    [InlineData("$filter=PhenomenonTime/BeginPosition ge 2021-01-01T00:00:00Z")]
+    [InlineData("$filter=PhenomenonTime/BeginPosition ge 2021-01-01T00:00:00+01:00")]
+    [InlineData("$filter=PhenomenonTime/BeginPosition ge 2021-01-01T00:00:00.123Z")]
+    [InlineData("$filter=PhenomenonTime/BeginPosition ge 2021-01-01")]
+    public void TryConvertFilterToSql_DateTimeLiteral_Parses(string filter)
+    {
+        // Arrange
+        var processor = SetupProcessor();
+
+        // Act
+        var success = processor.TryProcessFilter(filter, out var sqlResult, out var error);
+
+        // Assert
+        Assert.True(success, error);
+        Assert.NotNull(sqlResult);
+        Assert.Null(error);
+        Assert.Equal("phenomenon_time_start >= @p1", sqlResult);
+    }
+
     [Fact]
     public void TryConvertFilterToSql_IncorrectComparison_ReturnsFalse()
     {

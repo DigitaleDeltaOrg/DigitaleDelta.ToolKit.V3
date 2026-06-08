@@ -42,7 +42,7 @@ public partial class ODataParser : Parser {
 		DAY=22, HOUR=23, MINUTE=24, SECOND=25, NOW=26, DATE=27, DISTANCE=28, INTERSECTS=29, 
 		HAS=30, EQ=31, GT=32, LT=33, GE=34, LE=35, EQ_OP=36, NE=37, AND=38, OR=39, 
 		NOT=40, IN=41, LPAREN=42, RPAREN=43, COMMA=44, AMPERSAND=45, BOOLEAN=46, 
-		NUMBER=47, STRING=48, IDENTIFIER=49, WS=50;
+		DATETIME=47, NUMBER=48, STRING=49, IDENTIFIER=50, WS=51;
 	public const int
 		RULE_query = 0, RULE_queryOption = 1, RULE_filterOption = 2, RULE_primary = 3, 
 		RULE_valueList = 4, RULE_filterExpr = 5, RULE_function = 6, RULE_comparison = 7, 
@@ -69,8 +69,8 @@ public partial class ODataParser : Parser {
 		"TIME", "FLOOR", "CEIL", "ROUND", "ABS", "YEAR", "MONTH", "DAY", "HOUR", 
 		"MINUTE", "SECOND", "NOW", "DATE", "DISTANCE", "INTERSECTS", "HAS", "EQ", 
 		"GT", "LT", "GE", "LE", "EQ_OP", "NE", "AND", "OR", "NOT", "IN", "LPAREN", 
-		"RPAREN", "COMMA", "AMPERSAND", "BOOLEAN", "NUMBER", "STRING", "IDENTIFIER", 
-		"WS"
+		"RPAREN", "COMMA", "AMPERSAND", "BOOLEAN", "DATETIME", "NUMBER", "STRING", 
+		"IDENTIFIER", "WS"
 	};
 	public static readonly IVocabulary DefaultVocabulary = new Vocabulary(_LiteralNames, _SymbolicNames);
 
@@ -317,6 +317,7 @@ public partial class ODataParser : Parser {
 	public partial class PrimaryContext : ParserRuleContext {
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode IDENTIFIER() { return GetToken(ODataParser.IDENTIFIER, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode STRING() { return GetToken(ODataParser.STRING, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DATETIME() { return GetToken(ODataParser.DATETIME, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NUMBER() { return GetToken(ODataParser.NUMBER, 0); }
 		public PrimaryContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -345,7 +346,7 @@ public partial class ODataParser : Parser {
 			{
 			State = 47;
 			_la = TokenStream.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 985162418487296L) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 2111062325329920L) != 0)) ) {
 			ErrorHandler.RecoverInline(this);
 			}
 			else {
@@ -493,6 +494,7 @@ public partial class ODataParser : Parser {
 			State = 66;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
+			case DATETIME:
 			case NUMBER:
 			case STRING:
 			case IDENTIFIER:
@@ -1402,7 +1404,7 @@ public partial class ODataParser : Parser {
 	}
 
 	private static int[] _serializedATN = {
-		4,1,50,256,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
+		4,1,51,256,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
 		7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,1,0,1,0,1,0,5,0,30,8,
 		0,10,0,12,0,33,9,0,1,0,1,0,1,1,1,1,1,1,1,1,1,1,3,1,42,8,1,1,2,1,2,1,2,
 		1,2,1,3,1,3,1,4,1,4,1,4,5,4,53,8,4,10,4,12,4,56,9,4,1,5,1,5,1,5,1,5,1,
@@ -1418,7 +1420,7 @@ public partial class ODataParser : Parser {
 		6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,3,6,228,8,6,1,7,1,7,1,8,
 		1,8,1,8,1,8,1,8,5,8,237,8,8,10,8,12,8,240,9,8,1,9,1,9,1,10,1,10,1,10,1,
 		10,1,11,1,11,1,11,1,11,1,12,1,12,1,12,1,12,1,12,0,1,10,13,0,2,4,6,8,10,
-		12,14,16,18,20,22,24,0,2,1,0,47,49,1,0,32,37,281,0,26,1,0,0,0,2,41,1,0,
+		12,14,16,18,20,22,24,0,2,1,0,47,50,1,0,32,37,281,0,26,1,0,0,0,2,41,1,0,
 		0,0,4,43,1,0,0,0,6,47,1,0,0,0,8,49,1,0,0,0,10,66,1,0,0,0,12,227,1,0,0,
 		0,14,229,1,0,0,0,16,231,1,0,0,0,18,241,1,0,0,0,20,243,1,0,0,0,22,247,1,
 		0,0,0,24,251,1,0,0,0,26,31,3,2,1,0,27,28,5,45,0,0,28,30,3,2,1,0,29,27,
@@ -1462,7 +1464,7 @@ public partial class ODataParser : Parser {
 		3,10,5,0,184,185,5,43,0,0,185,228,1,0,0,0,186,187,5,15,0,0,187,188,5,42,
 		0,0,188,189,3,10,5,0,189,190,5,43,0,0,190,228,1,0,0,0,191,192,5,28,0,0,
 		192,193,5,42,0,0,193,194,3,10,5,0,194,195,5,43,0,0,195,228,1,0,0,0,196,
-		197,5,29,0,0,197,198,5,42,0,0,198,199,5,48,0,0,199,228,5,43,0,0,200,201,
+		197,5,29,0,0,197,198,5,42,0,0,198,199,5,49,0,0,199,228,5,43,0,0,200,201,
 		5,30,0,0,201,202,5,42,0,0,202,203,3,10,5,0,203,204,5,44,0,0,204,205,3,
 		10,5,0,205,206,5,43,0,0,206,228,1,0,0,0,207,208,5,16,0,0,208,209,5,42,
 		0,0,209,210,3,10,5,0,210,211,5,43,0,0,211,228,1,0,0,0,212,213,5,17,0,0,
@@ -1478,10 +1480,10 @@ public partial class ODataParser : Parser {
 		13,1,0,0,0,229,230,7,1,0,0,230,15,1,0,0,0,231,232,5,2,0,0,232,233,5,31,
 		0,0,233,238,3,18,9,0,234,235,5,44,0,0,235,237,3,18,9,0,236,234,1,0,0,0,
 		237,240,1,0,0,0,238,236,1,0,0,0,238,239,1,0,0,0,239,17,1,0,0,0,240,238,
-		1,0,0,0,241,242,5,49,0,0,242,19,1,0,0,0,243,244,5,3,0,0,244,245,5,31,0,
-		0,245,246,5,47,0,0,246,21,1,0,0,0,247,248,5,4,0,0,248,249,5,31,0,0,249,
+		1,0,0,0,241,242,5,50,0,0,242,19,1,0,0,0,243,244,5,3,0,0,244,245,5,31,0,
+		0,245,246,5,48,0,0,246,21,1,0,0,0,247,248,5,4,0,0,248,249,5,31,0,0,249,
 		250,5,46,0,0,250,23,1,0,0,0,251,252,5,5,0,0,252,253,5,31,0,0,253,254,5,
-		48,0,0,254,25,1,0,0,0,9,31,41,54,66,84,86,139,227,238
+		49,0,0,254,25,1,0,0,0,9,31,41,54,66,84,86,139,227,238
 	};
 
 	public static readonly ATN _ATN =

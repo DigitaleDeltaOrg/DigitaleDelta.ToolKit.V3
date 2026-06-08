@@ -100,9 +100,9 @@ public static class SharedHelper
         
         if (DateTimeOffset.TryParse(literal, out var dateTimeOffsetValue))
         {
-            return dateTimeOffsetValue;
+            return dateTimeOffsetValue.ToUniversalTime();
         }
-    
+
         return literal;
     }
 

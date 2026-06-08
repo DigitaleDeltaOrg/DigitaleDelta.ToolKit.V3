@@ -19,6 +19,7 @@ filterOption
 primary
     : IDENTIFIER
     | STRING
+    | DATETIME
     | NUMBER
     ;
 
@@ -151,6 +152,12 @@ COMMA     : ',' ;
 AMPERSAND : '&' ;
 
 BOOLEAN   : 'true' | 'false' ;
+DATETIME  : DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT
+            ( 'T' DIGIT DIGIT ':' DIGIT DIGIT ':' DIGIT DIGIT
+              ('.' DIGIT+)?
+              ( 'Z' | ('+' | '-') DIGIT DIGIT ':' DIGIT DIGIT )?
+            )?
+          ;
 NUMBER    : '-'? DIGIT+ ('.' DIGIT+)? ;
 STRING    : QUOTE .*? QUOTE ;
 IDENTIFIER: ALPHA (ALPHA | DIGIT | '_' | '/')* ;
