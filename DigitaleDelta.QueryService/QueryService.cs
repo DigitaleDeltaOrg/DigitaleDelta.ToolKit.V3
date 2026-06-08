@@ -170,7 +170,7 @@ public class QueryService
 
         if (queryParameters.Count == true)
         {
-            var countCacheKey = $"{queryParameters.Filter?.GetText() ?? string.Empty}/{GetUniversalName(queryParameters.ClaimsPrincipal)}/count";
+            var countCacheKey = $"{_parameters.EntitySetName}/{queryParameters.Filter?.GetText() ?? string.Empty}/{GetUniversalName(queryParameters.ClaimsPrincipal)}/count";
 
             totalCount = await _cache.GetOrCreateAsync(countCacheKey, cacheEntry =>
             {
