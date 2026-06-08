@@ -16,6 +16,12 @@ public static class RequestExtensions
     private const string referenceAppliedConstant = "Preference-Applied";
     private const string preferHeaderConstant = "Prefer";
 
+    private static readonly HashSet<string> _allowedQueryKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "$filter", "$select", "$top", "$count", "$skiptoken",
+        "prefer", "content-crs"
+    };
+
     /// <param name="request">The HTTP request.</param>
     extension(HttpRequest request)
     {
@@ -74,6 +80,21 @@ public static class RequestExtensions
             {
                 Url = request.GetUrl()
             };
+
+            var rawQuery = request.QueryString.Value ?? string.Empty;
+
+            if (rawQuery.Length > 1 && rawQuery.IndexOf('?', 1) >= 0)
+            {
+                throw new ODataValidationException("Malformed query string: multiple '?' detected.", null, "MalformedQueryString");
+            }
+
+            foreach (var key in request.Query.Keys)
+            {
+                if (!_allowedQueryKeys.Contains(key))
+                {
+                    throw new ODataValidationException($"Unsupported query parameter: '{key}'", null, "UnsupportedQueryParameter");
+                }
+            }
 
             request.Query.TryGetValue("$filter", out var filterValue);
 
