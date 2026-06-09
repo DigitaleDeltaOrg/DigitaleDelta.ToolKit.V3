@@ -1,6 +1,6 @@
 # Contributing to DigitaleDelta OData Library
 
-Thank you for your interest in contributing to the DigitaleDelta OData Library! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to the DigitaleDelta OData Toolkit! This document provides guidelines and information for contributors.
 
 ## Project scope and focus
 
