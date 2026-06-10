@@ -327,7 +327,7 @@ public static class Configure
             CountCachePeriod = builder.Configuration.GetValue<int?>("CountCachePeriod") ?? 5,
             HmacAlgorithm = builder.Configuration.GetValue<string>("HmacAlgorithm") ?? "HMACSHA256",
             MaxPageSize = builder.Configuration.GetValue<int?>($"{key}:MaxPageSize") ?? 10000,
-            DefaultPageSize = builder.Configuration.GetValue<int?>($"{key}:MaxPageSize") ?? 1000,
+            DefaultPageSize = builder.Configuration.GetValue<int?>($"{key}:DefaultPageSize") ?? 1000,
             RequireFilter = requireFilter
         };
     }
