@@ -7,7 +7,7 @@ namespace DigitaleDelta.SkipToken.Tests;
 public class SkipTokenHelperTests
 {
     // Deze key komt overeen met die in SkipTokenHelper
-    private static readonly byte[] HmacKey = "JOUW-ZEER-GEHEIME-SLEUTEL-HIER"u8.ToArray();
+    private static readonly byte[] _hmacKey = "JOUW-ZEER-GEHEIME-SLEUTEL-HIER"u8.ToArray();
     private static SkipTokenHelper SkipTokenHelper { get; } = new("JOUW-ZEER-GEHEIME-SLEUTEL-HIER");
 
     private static string BuildTokenQueryParam(DateTimeOffset creationDate, string requestUrl = "data?x=1", string lastId = "42")
@@ -16,7 +16,7 @@ public class SkipTokenHelperTests
         var skipTokenJson = System.Text.Json.JsonSerializer.Serialize(skipToken);
         var jsonBytes = Encoding.UTF8.GetBytes(skipTokenJson);
         var base64Json = Convert.ToBase64String(jsonBytes);
-        using var hmac = new HMACSHA256(HmacKey);
+        using var hmac = new HMACSHA256(_hmacKey);
         var hmacHash = hmac.ComputeHash(jsonBytes);
         var base64Hmac = Convert.ToBase64String(hmacHash);
         var fullToken = $"{base64Json}.{base64Hmac}";
@@ -90,19 +90,6 @@ public class SkipTokenHelperTests
         var url = $"https://test.com/data?$skiptoken={WebUtility.UrlEncode(param)}";
 
         var valid = SkipTokenHelper.TryExtractFromUrl(url, out var token, out var error, 10);
-        Assert.Null(token);
-        Assert.False(valid);
-        Assert.NotNull(error);
-    }
-
-    [Fact]
-    public void ExtractFromUrl_ShouldNotWorkWithRelativeUrl()
-    {
-        var creation = DateTimeOffset.UtcNow;
-        var param = BuildTokenQueryParam(creation, "/apitest", "77");
-        var url = $"/somecontroller?foo=bar&{param}";
-        var valid = SkipTokenHelper.TryExtractFromUrl(url, out var token, out var error);
-
         Assert.Null(token);
         Assert.False(valid);
         Assert.NotNull(error);

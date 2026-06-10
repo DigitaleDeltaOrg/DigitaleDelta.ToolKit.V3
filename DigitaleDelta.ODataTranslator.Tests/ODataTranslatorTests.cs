@@ -217,6 +217,46 @@ public class ODataToSqlConverterTests
     }
 
     [Fact]
+    public void TryConvertFilterToSql_NumberStillParses_AfterDateTimeAdded()
+    {
+        // Regression: ensure adding DATETIME to primary did not break NUMBER literals.
+        var processor = SetupProcessor();
+
+        var success = processor.TryProcessFilter("$filter=Price ge 2021", out var sqlResult, out var error);
+
+        Assert.True(success, error);
+        Assert.Equal("price >= @p1", sqlResult);
+    }
+
+    [Fact]
+    public void TryConvertFilterToSql_DateTimeInClause_Parses()
+    {
+        var processor = SetupProcessor();
+
+        var success = processor.TryProcessFilter(
+            "$filter=PhenomenonTime/BeginPosition in (2021-01-01T00:00:00Z, 2021-01-02T00:00:00Z)",
+            out var sqlResult,
+            out var error);
+
+        Assert.True(success, error);
+        Assert.NotNull(sqlResult);
+    }
+
+    [Theory]
+    [InlineData("$filter=PhenomenonTime/BeginPosition ge 2021-1-1")]              // single-digit parts: lexer split into NUMBER tokens
+    [InlineData("$filter=PhenomenonTime/BeginPosition ge 2021-01-01T00:00Z")]     // missing seconds: grammar requires HH:MM:SS
+    public void TryConvertFilterToSql_MalformedDateTime_Rejected(string filter)
+    {
+        var processor = SetupProcessor();
+
+        var success = processor.TryProcessFilter(filter, out var sqlResult, out var error);
+
+        Assert.False(success);
+        Assert.Null(sqlResult);
+        Assert.NotNull(error);
+    }
+
+    [Fact]
     public void TryConvertFilterToSql_IncorrectComparison_ReturnsFalse()
     {
         // Arrange
