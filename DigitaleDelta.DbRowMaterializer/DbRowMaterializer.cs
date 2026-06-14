@@ -99,7 +99,7 @@ public static class DbRowMaterializer
 
             for (var i = 0; i < count; i++)
             {
-                var val = ReadValueFast(logger, reader, specs[i], fieldTypes[i], targetSrid);
+                var val = ReadValueFast(reader, specs[i], fieldTypes[i], targetSrid);
 
                 if (!suppressNulls || (val is not null && val is not DBNull))
                 {
@@ -122,14 +122,13 @@ public static class DbRowMaterializer
     /// <summary>
     /// Reads a value from the specified column in the <see cref="DbDataReader"/> efficiently, applying transformations based on the column type and target field type.
     /// </summary>
-    /// <param name="logger">The logger used for capturing diagnostic information during value retrieval.</param>
     /// <param name="r">The data reader instance from which the value is read.</param>
     /// <param name="spec">The column specification that includes the ordinal position and type of the column.</param>
     /// <param name="fieldType">The expected data type of the target field.</param>
     /// <param name="targetSrid">The optional Spatial Reference Identifier (SRID) for interpreting geography data, if applicable.</param>
     /// <returns>Returns the value retrieved from the specified column. The type and format of the returned value depend on the column type and transformations applied.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static object? ReadValueFast(ILogger logger, DbDataReader r, ColSpec spec, Type fieldType, int? targetSrid)
+    private static object? ReadValueFast(DbDataReader r, ColSpec spec, Type fieldType, int? targetSrid)
     {
         var ord = spec.Ordinal;
 
@@ -179,18 +178,17 @@ public static class DbRowMaterializer
 
                     if (t == typeof(DateTime))
                     {
-                        try
-                        {
-                            var dt = r.GetFieldValue<DateTime>(ord);
+                        var dt = r.GetFieldValue<DateTime>(ord);
 
-                            return new DateTimeOffset(dt);
-                        }
-                        catch (ArgumentOutOfRangeException ex)
-                        {
-                            logger.LogWarning(ex, "Invalid date value in column {Ordinal}, returning null", ord);
-
-                            return null;
-                        }
+                        // Sensor-data safe & database-independent: treat the stored value as UTC.
+                        // We never apply a local-time conversion, so the DST fall-back hour (a
+                        // wall-clock time like 02:30 that occurs twice) can never be made
+                        // ambiguous here, and offset 0 can never throw ArgumentOutOfRangeException.
+                        // Kind == Utc       -> SpecifyKind is a no-op.
+                        // Kind == Unspecified (SQL Server, PostgreSQL timestamp, SQLite) -> labelled UTC.
+                        // Kind == Local     -> wall-clock is labelled UTC rather than converted,
+                        //                      deliberately avoiding the ambiguous conversion step.
+                        return new DateTimeOffset(DateTime.SpecifyKind(dt, DateTimeKind.Utc));
                     }
 
                     if (t != typeof(string))
