@@ -346,7 +346,7 @@ public class ODataToSqlConverter(Dictionary<string, ODataToSqlMap> propertyMaps,
 
         for (var i = 0; i < context.ChildCount; i++)
         {
-            var text = context.GetChild(i).GetText().ToLower();
+            var text = context.GetChild(i).GetText();
 
             if (text == "(")
             {
