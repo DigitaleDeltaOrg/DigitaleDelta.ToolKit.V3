@@ -373,7 +373,7 @@ public class ODataToSqlConverter(Dictionary<string, ODataToSqlMap> propertyMaps,
                     return (false, string.Format(ErrorMessages.inClauseTypeMismatch, 0, leftExpression.GetText()), null);
                 }
 
-                parameterNames.Add(CreateParameter(value));
+                parameterNames.Add(CreateParameter(value.ParseLiteralValue()));
             }
         }
 
