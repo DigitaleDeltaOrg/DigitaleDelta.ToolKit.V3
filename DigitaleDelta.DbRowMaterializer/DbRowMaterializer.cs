@@ -137,12 +137,12 @@ public static class DbRowMaterializer
             return null;
         }
 
-        if (spec.Render == RenderKind.json)
-        {
-            var raw = r.GetValue(ord) as string;
-
-            return string.IsNullOrWhiteSpace(raw) ? null : new RawJson(raw);
-        }
+        //if (spec.Render == RenderKind.json)
+        //{
+        //    var raw = r.GetValue(ord) as string;
+        //
+        //    return string.IsNullOrWhiteSpace(raw) ? null : new RawJson(raw);
+        //}
 
         switch (spec.Kind)
         {

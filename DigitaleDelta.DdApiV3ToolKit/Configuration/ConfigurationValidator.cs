@@ -719,26 +719,16 @@ $"""
         }
         catch(Exception e)
         {
-            if (Debugger.IsAttached)
+            try
             {
-                try
-                {
-                    data = File.ReadAllText(url);
-                }
-                catch (Exception ex)
-                {
-                    LogError($"Fout bij ophalen/parsen van {url}: {ex.Message}");
-
-                    return new Dictionary<string, DigitaleDeltaDefinition>(StringComparer.InvariantCultureIgnoreCase);
-                }
+                data = File.ReadAllText(url);
             }
-            else
+            catch (Exception ex)
             {
-                LogError($"Fout bij ophalen/parsen van url: {url}: {e.Message}");
+                LogError($"Fout bij ophalen/parsen van {url}: {ex.Message}");
 
                 return new Dictionary<string, DigitaleDeltaDefinition>(StringComparer.InvariantCultureIgnoreCase);
             }
-
         }
 
         var csvConfig = new CsvHelper.Configuration.CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture)
