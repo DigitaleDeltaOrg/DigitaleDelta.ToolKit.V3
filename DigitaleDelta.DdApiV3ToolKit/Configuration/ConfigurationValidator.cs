@@ -30,10 +30,12 @@ public static class ConfigurationValidator
     private static readonly string _redocHtmlFileName = Path.Combine(Configure.configurationFilesPath, "redoc.html");
     private static Dictionary<string, DigitaleDeltaDefinition> _contextDefinitions = new(StringComparer.InvariantCultureIgnoreCase);
     private static Dictionary<string, DigitaleDeltaDefinition> _metadataDefinitions = new(StringComparer.InvariantCultureIgnoreCase);
+    private static Dictionary<string, DigitaleDeltaDefinition> _referenceDefinitions = new(StringComparer.InvariantCultureIgnoreCase);
     private const string parameterPrefix = "parameter/";
     private const string metadataPrefix = "metadata/";
     private const string contextDefinitionsName = "ContextDefinitions";
     private const string metadataDefinitionsName = "MetadataDefinitions";
+    private const string referenceDefinitionsName = "ReferenceDefinitions";
     private const string observationConfiguration = "ObservationConfiguration";
     private const string referenceConfiguration = "ReferenceConfiguration";
     private const string propertyMapping = "PropertyMapping";
@@ -113,6 +115,9 @@ public static class ConfigurationValidator
 
             csdlText = csdlText.Replace("<!-- ParameterPlaceholder -->", string.Join(Environment.NewLine, parameterPropertiesInConfiguration.OrderBy(a => a.ODataPropertyName).Select(a => $"           <Property Name=\"{a.ODataPropertyName.Replace(parameterPrefix, string.Empty, StringComparison.InvariantCultureIgnoreCase)}\" Type=\"{a.EdmType}\" Nullable=\"true\" />")));
             csdlText = csdlText.Replace("<!-- MetadataPlaceholder -->", string.Join(Environment.NewLine, metadataPropertiesInConfiguration.OrderBy(a => a.ODataPropertyName).Select(a => $"             <Property Name=\"{a.ODataPropertyName.Replace(metadataPrefix, string.Empty, StringComparison.InvariantCultureIgnoreCase)}\" Type=\"{a.EdmType}\" Nullable=\"true\" />")));
+            csdlText = csdlText.Replace("{MetadataSemantics}", builder.Configuration.GetValue<string>(metadataDefinitionsName));
+            csdlText = csdlText.Replace("{ParameterSemantics}", builder.Configuration.GetValue<string>(contextDefinitionsName));
+            csdlText = csdlText.Replace("{ReferenceSemantics}", builder.Configuration.GetValue<string>(referenceDefinitionsName));
 
             if (!CsdlParser.CsdlParser.TryParse(csdlText, out _csdlModel, out var error) || _csdlModel == null)
             {
@@ -126,6 +131,9 @@ public static class ConfigurationValidator
             var metadataProperties = string.Join(Environment.NewLine, metadataPropertiesInConfiguration.OrderBy(a => a.ODataPropertyName).Select(a => OpenApiPropertyConstructor(a, metadataPrefix, _metadataDefinitions)));
             openApiText = Regex.Replace(openApiText, "^.*## ParameterPlaceholder.*$", parameterProperties, RegexOptions.Multiline);
             openApiText = Regex.Replace(openApiText, "^.*## MetadataPlaceholder.*$", metadataProperties, RegexOptions.Multiline);
+            openApiText = openApiText.Replace("https://ParameterSemantics", builder.Configuration.GetValue<string>(contextDefinitionsName));
+            openApiText = openApiText.Replace("https://MetadataSemantics", builder.Configuration.GetValue<string>(metadataDefinitionsName));
+            openApiText = openApiText.Replace("https://ReferenceSemantics", builder.Configuration.GetValue<string>(referenceDefinitionsName));
 
             if (!IsValidYaml(openApiText, out var yamlError))
             {

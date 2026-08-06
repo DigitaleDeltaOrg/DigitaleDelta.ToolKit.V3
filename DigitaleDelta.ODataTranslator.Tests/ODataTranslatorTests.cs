@@ -1,5 +1,7 @@
 ﻿using DigitaleDelta.ODataTranslator.Helpers;
 using DigitaleDelta.Contracts.Configuration;
+using NetTopologySuite.Geometries;
+using NetTopologySuite.IO;
 
 namespace DigitaleDelta.ODataTranslator.Tests;
 

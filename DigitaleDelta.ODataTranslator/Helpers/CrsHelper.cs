@@ -11,60 +11,60 @@ namespace DigitaleDelta.ODataTranslator.Helpers;
 /// </summary>
 public static class CrsHelper
 {
+    /// <summary>
+    /// Default number of decimal places to keep per SRID when emitting coordinates.
+    /// Projected CRS (meters) default to 1 decimal (~10cm); geographic CRS (degrees) to 6 decimals (~11cm).
+    /// Override at startup via appsettings (GeometryPrecision) and <see cref="SetPrecision"/>.
+    /// </summary>
+    private static readonly Dictionary<int, int> CoordinateDecimals = new()
+    {
+        { 28992, 1 },
+        { 25831, 1 },
+        { 3035,  1 },
+        { 27700, 1 },
+        { 3857,  1 },
+        { 4258,  6 },
+        { 4326,  6 },
+    };
+
+    private static int _defaultDecimals = 6;
+
+    /// <summary>
+    /// Configure rounding precision for a specific SRID. Pass <paramref name="decimals"/> = -1 to disable rounding for that SRID.
+    /// </summary>
+    public static void SetPrecision(int srid, int decimals) => CoordinateDecimals[srid] = decimals;
+
+    /// <summary>
+    /// Configure the fallback precision used when an SRID is not explicitly mapped.
+    /// </summary>
+    public static void SetDefaultPrecision(int decimals) => _defaultDecimals = decimals;
+
+    private static int GetDecimals(int srid) => CoordinateDecimals.TryGetValue(srid, out var d) ? d : _defaultDecimals;
+
+    /// <summary>
+    /// Returns the geometry with its coordinates rounded to the configured precision for the given SRID.
+    /// </summary>
+    public static Geometry Round(Geometry geometry, int srid)
+    {
+        var decimals = GetDecimals(srid);
+
+        if (decimals < 0)
+        {
+            return geometry;
+        }
+
+        var reducer = new GeometryPrecisionReducer(new PrecisionModel(Math.Pow(10, decimals)));
+        var reduced = reducer.Reduce(geometry);
+
+        reduced.SRID = geometry.SRID;
+
+        return reduced;
+    }
+
 	private static readonly CoordinateSystemFactory         CsFactory = new();
 	private static readonly CoordinateTransformationFactory CtFactory = new();
 
-	/// <summary>
-	/// Default number of decimal places to keep per SRID when emitting coordinates.
-	/// Projected CRS (meters) default to 1 decimal (~10cm); geographic CRS (degrees) to 6 decimals (~11cm).
-	/// Override at startup via appsettings (GeometryPrecision) and <see cref="SetPrecision"/>.
-	/// </summary>
-	private static readonly Dictionary<int, int> CoordinateDecimals = new()
-	{
-		{ 28992, 1 },
-		{ 25831, 1 },
-		{ 3035,  1 },
-		{ 27700, 1 },
-		{ 3857,  1 },
-		{ 4258,  6 },
-		{ 4326,  6 },
-	};
-
-	private static int _defaultDecimals = 6;
-
-	/// <summary>
-	/// Configure rounding precision for a specific SRID. Pass <paramref name="decimals"/> = -1 to disable rounding for that SRID.
-	/// </summary>
-	public static void SetPrecision(int srid, int decimals) => CoordinateDecimals[srid] = decimals;
-
-	/// <summary>
-	/// Configure the fallback precision used when an SRID is not explicitly mapped.
-	/// </summary>
-	public static void SetDefaultPrecision(int decimals) => _defaultDecimals = decimals;
-
-	private static int GetDecimals(int srid) => CoordinateDecimals.TryGetValue(srid, out var d) ? d : _defaultDecimals;
-
-	/// <summary>
-	/// Returns the geometry with its coordinates rounded to the configured precision for the given SRID.
-	/// </summary>
-	public static Geometry Round(Geometry geometry, int srid)
-	{
-		var decimals = GetDecimals(srid);
-
-		if (decimals < 0)
-		{
-			return geometry;
-		}
-
-		var reducer = new GeometryPrecisionReducer(new PrecisionModel(Math.Pow(10, decimals)));
-		var reduced = reducer.Reduce(geometry);
-
-		reduced.SRID = geometry.SRID;
-
-		return reduced;
-	}
-
-	public static readonly Dictionary<int, string> SupportedCrs = new()
+    public static readonly Dictionary<int, string> SupportedCrs = new()
 	{
 		{ 4326, """
 		        GEOGCS["WGS 84",
@@ -95,14 +95,14 @@ public static class CrsHelper
 		             GEOGCS["Amersfoort",
 		                 DATUM["Amersfoort",
 		                     SPHEROID["Bessel 1841",6377397.155,299.1528128],
-		                     TOWGS84[565.2369,50.0087,465.658,-0.406857,0.350733,-1.87035,4.0812]],
+		                     TOWGS84[565.4171,50.3319,465.5524,1.9342,-1.6677,9.1019,4.0725]],
 		                 PRIMEM["Greenwich",0,
 		                     AUTHORITY["EPSG","8901"]],
 		                 UNIT["degree",0.0174532925199433,
 		                     AUTHORITY["EPSG","9122"]],
 		                 AUTHORITY["EPSG","4289"]],
 		             PROJECTION["Oblique_Stereographic"],
-		             PARAMETER["latitude_of_origin",52.15616055555555],
+		             PARAMETER["latitude_of_origin",52.1561605555556],
 		             PARAMETER["central_meridian",5.38763888888889],
 		             PARAMETER["scale_factor",0.9999079],
 		             PARAMETER["false_easting",155000],
@@ -208,9 +208,7 @@ public static class CrsHelper
 		var transformation       = CtFactory.CreateFromCoordinateSystems(fromCoordinateSystem, toCoordinateSystem);
 		var transformedGeometry  = TransformGeometry(geometry, transformation.MathTransform);
 
-		transformedGeometry.SRID = toId;
-
-		return (true, Round(transformedGeometry, toId));
+		return (true, transformedGeometry);
 	}
 
 	/// <summary>
@@ -232,59 +230,28 @@ public static class CrsHelper
 		var transformation       = CtFactory.CreateFromCoordinateSystems(fromCoordinateSystem, toCoordinateSystem);
 		var transformedGeometry  = TransformGeometry(geometry, transformation.MathTransform);
 
-		transformedGeometry.SRID = toId;
-
-		return (true, Round(transformedGeometry, toId));
+		return (true, transformedGeometry);
 	}
 
 	private static Geometry TransformGeometry(Geometry geometry, MathTransform transform)
 	{
-		var transformedCoordinates = geometry.Coordinates.Select(coordinate =>
-		                                                         {
-			                                                         var transformedCoordinate = transform.Transform(new[] { coordinate.X, coordinate.Y });
-			                                                         return new Coordinate(transformedCoordinate[0], transformedCoordinate[1]);
-		                                                         }).ToArray();
+	    var transformedGeometry = geometry.Copy();
 
-		return geometry.Factory.CreateGeometry(geometry.CopyWithNewCoordinates(transformedCoordinates, transform));
-	}
+        transformedGeometry.Apply(new CoordinateTransformFilter(transform));
 
-	private static Geometry CopyWithNewCoordinates(this Geometry geometry, Coordinate[] coordinates, MathTransform transform)
-	{
-		var geomType = geometry.GetType();
+        return transformedGeometry;
+    }
 
-		if (geomType == typeof(Point))
-		{
-			return new Point(coordinates[0]);
-		}
+    private sealed class CoordinateTransformFilter(MathTransform transform) : ICoordinateFilter
+    {
+        public void Filter(Coordinate coordinate)
+        {
+            var transformedCoordinate = transform.Transform([coordinate.X, coordinate.Y]);
 
-		if (geomType == typeof(LineString))
-		{
-			return new LineString(coordinates);
-		}
-
-		if (geomType == typeof(Polygon))
-		{
-			var linearRing = new LinearRing(coordinates);
-			return new Polygon(linearRing);
-		}
-
-		if (geomType == typeof(MultiPolygon))
-		{
-			var polygons = new Polygon[geometry.NumGeometries];
-			for (var i = 0; i < geometry.NumGeometries; i++)
-			{
-				var polygon = (Polygon)geometry.GetGeometryN(i);
-				polygons[i] = (Polygon)polygon.CopyWithNewCoordinates(polygon.Coordinates.Select(coord =>
-				                                                                                 {
-					                                                                                 var transformedCoordinate = transform.Transform(new[] { coord.X, coord.Y });
-					                                                                                 return new Coordinate(transformedCoordinate[0], transformedCoordinate[1]);
-				                                                                                 }).ToArray(), transform);
-			}
-			return new MultiPolygon(polygons);
-		}
-
-		throw new NotSupportedException("Geometry type not supported");
-	}
+            coordinate.X = transformedCoordinate[0];
+            coordinate.Y = transformedCoordinate[1];
+        }
+    }
 
 	/// <summary>
 	/// Validate content CRS

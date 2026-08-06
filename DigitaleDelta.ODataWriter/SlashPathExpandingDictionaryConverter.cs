@@ -158,9 +158,9 @@ public sealed class SlashPathExpandingDictionaryConverter : JsonConverter<Dictio
                     writer.WriteNullValue();
                     break;
 
-//                case RawJson raw:
-//                    writer.WriteRawValue(raw.Json);
-//                    break;
+                case RawJson raw:
+                    writer.WriteRawValue(raw.Json);
+                    break;
 
                 case Dictionary<string, object?> dict:
                     writer.WriteStartObject();
