@@ -346,7 +346,7 @@ public class ODataToSqlConverter(Dictionary<string, ODataToSqlMap> propertyMaps,
 
         for (var i = 0; i < context.ChildCount; i++)
         {
-            var text = context.GetChild(i).GetText().ToLower();
+            var text = context.GetChild(i).GetText();
 
             if (text == "(")
             {
@@ -373,7 +373,7 @@ public class ODataToSqlConverter(Dictionary<string, ODataToSqlMap> propertyMaps,
                     return (false, string.Format(ErrorMessages.inClauseTypeMismatch, 0, leftExpression.GetText()), null);
                 }
 
-                parameterNames.Add(CreateParameter(value));
+                parameterNames.Add(CreateParameter(value.ParseLiteralValue()));
             }
         }
 
