@@ -158,6 +158,10 @@ public sealed class SlashPathExpandingDictionaryConverter : JsonConverter<Dictio
                     writer.WriteNullValue();
                     break;
 
+                case NetTopologySuite.Geometries.Geometry geometry:
+                    JsonSerializer.Serialize(writer, geometry, geometry.GetType(), options);
+                    break;
+
                 case RawJson raw:
                     writer.WriteRawValue(raw.Json);
                     break;
