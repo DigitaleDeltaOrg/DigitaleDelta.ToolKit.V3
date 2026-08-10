@@ -40,6 +40,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitaleDelta.RateLimiting"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitaleDelta.RateLimiting.Tests", "DigitaleDelta.RateLimiting.Tests\DigitaleDelta.RateLimiting.Tests.csproj", "{B440BFD5-96A4-473B-A6F6-8B4997EDA117}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitaleDelta.CoverageJSON", "DigitaleDelta.CoverageJSON\DigitaleDelta.CoverageJSON.csproj", "{963EAB37-56AD-4896-9F64-6780412DCAAD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -126,5 +128,9 @@ Global
 		{B440BFD5-96A4-473B-A6F6-8B4997EDA117}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B440BFD5-96A4-473B-A6F6-8B4997EDA117}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B440BFD5-96A4-473B-A6F6-8B4997EDA117}.Release|Any CPU.Build.0 = Release|Any CPU
+		{963EAB37-56AD-4896-9F64-6780412DCAAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{963EAB37-56AD-4896-9F64-6780412DCAAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{963EAB37-56AD-4896-9F64-6780412DCAAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{963EAB37-56AD-4896-9F64-6780412DCAAD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

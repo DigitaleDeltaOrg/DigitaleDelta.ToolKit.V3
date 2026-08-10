@@ -97,6 +97,11 @@ public enum EdmType
     /// </summary>
     EdmComplexType,
     /// <summary>
+    /// Represents an untyped Entity Data Model (EDM) type.
+    /// This type is used when the exact type is not specified or cannot be determined.
+    /// </summary>
+    EdmUntyped,
+    /// <summary>
     /// Unknown (fallback)
     /// </summary>
     EdmUnknown
