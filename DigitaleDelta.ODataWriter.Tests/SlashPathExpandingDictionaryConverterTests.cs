@@ -20,7 +20,6 @@ public sealed class SlashPathExpandingDictionaryConverterTests
     {
         var geometry = new WKTReader().Read("MULTIPOLYGON (((0 0, 0 1, 1 1, 0 0)), ((2 2, 2 3, 3 3, 2 2)))");
         var value = new Dictionary<string, object?> { ["Geography"] = geometry };
-
         using var document = JsonDocument.Parse(JsonSerializer.Serialize(value, Options()));
         var geography = document.RootElement.GetProperty("Geography");
 
@@ -33,7 +32,6 @@ public sealed class SlashPathExpandingDictionaryConverterTests
     {
         var geometry = new WKTReader().Read("POLYGON ((0 0, 0 1, 1 1, 0 0))");
         var value = new Dictionary<string, object?> { ["Geography"] = geometry };
-
         using var document = JsonDocument.Parse(JsonSerializer.Serialize(value, Options()));
 
         Assert.Equal("Polygon", document.RootElement.GetProperty("Geography").GetProperty("type").GetString());
@@ -43,7 +41,6 @@ public sealed class SlashPathExpandingDictionaryConverterTests
     public void Serialize_OrdinaryList_RemainsJsonArray()
     {
         var value = new Dictionary<string, object?> { ["Values"] = new object?[] { 1, "two", true } };
-
         using var document = JsonDocument.Parse(JsonSerializer.Serialize(value, Options()));
 
         Assert.Equal(JsonValueKind.Array, document.RootElement.GetProperty("Values").ValueKind);
@@ -53,7 +50,6 @@ public sealed class SlashPathExpandingDictionaryConverterTests
     public void Serialize_SlashPath_ExpandsNestedObject()
     {
         var value = new Dictionary<string, object?> { ["Properties/Name"] = "value" };
-
         using var document = JsonDocument.Parse(JsonSerializer.Serialize(value, Options()));
 
         Assert.Equal("value", document.RootElement.GetProperty("Properties").GetProperty("Name").GetString());
