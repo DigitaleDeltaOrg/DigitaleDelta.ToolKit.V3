@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0">
+<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0.1">
     <edmx:DataServices>
         <Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="DigitaleDeltaModels">
             <EntityType Name="Reference">
@@ -61,17 +61,22 @@
                 <Property Name="Verb" Type="Edm.String" Nullable="false" />
             </ComplexType>
             <ComplexType Name="CoverageAxis">
-                <Property Name="Name" Type="Edm.String" Nullable="false" />
-                <Property Name="Type" Type="Edm.String" />
-                <Property Name="Start" Type="Edm.Double" />
-                <Property Name="Stop" Type="Edm.Double" />
-                <Property Name="Num" Type="Edm.Int32" />
-                <Property Name="Values" Type="Collection(Edm.Double)" />
+                <Property Name="type" Type="Edm.String"/>
+                <Property Name="values" Type="Collection(Edm.Untyped)"/>
+                <Property Name="start" Type="Edm.Untyped"/>
+                <Property Name="stop" Type="Edm.Untyped"/>
+                <Property Name="size" Type="Edm.Int64"/>
+                <Property Name="offset" Type="Edm.Untyped"/>
+                <Property Name="spacing" Type="Edm.Untyped"/>
+                <Property Name="keys" Type="Collection(Edm.String)"/>
+            </ComplexType>
+            <ComplexType Name="CoverageAxes" OpenType="true">
+                <Property Name="t" Type="DigitaleDeltaModels.CoverageAxis" Nullable="false"/>
             </ComplexType>
             <ComplexType Name="CoverageDomain">
                 <Property Name="DomainType" Type="Edm.String" />
                 <Property Name="Axes" Type="Collection(CoverageJsonModels.CoverageAxis)" />
-                <Property Name="Referencing" Type="Collection(Edm.String)" />
+                <Property Name="Referencing" Type="CoverageAxes" />
             </ComplexType>
             <ComplexType Name="CoverageParameter">
                 <Property Name="Name" Type="Edm.String" Nullable="false" />
