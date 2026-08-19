@@ -194,19 +194,25 @@ public class ODataResponseBuilder
     /// <returns>A new dictionary containing only the selected properties of the entity.</returns>
     private static Dictionary<string, object?> ApplySelect(IDictionary<string, object?> entity, IEnumerable<string> selectProperties, bool applySort)
     {
-        var wanted = new HashSet<string>(selectProperties.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()), StringComparer.OrdinalIgnoreCase);
+        var wanted = new HashSet<string>(
+            selectProperties
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Select(s => s.Trim()),
+            StringComparer.OrdinalIgnoreCase);
 
         return CopySelectedLevel(entity, wanted, prefix: null, sort: applySort);
     }
 
     /// <summary>
-    /// Copies the selected levels of a nested dictionary based on the specified selected paths.
+    /// Copies the selected levels of a dictionary based on the specified selected paths.
+    /// Slash-path keys are intentionally preserved here; expansion is handled later by
+    /// SlashPathExpandingDictionaryConverter.
     /// </summary>
-    /// <param name="current">The current dictionary to process for selection.</param>
-    /// <param name="wantedPaths">The set of paths that determine selected keys at various levels.</param>
-    /// <param name="prefix">An optional prefix to track the key path during recursion.</param>
+    /// <param name="current">The current dictionary to process.</param>
+    /// <param name="wantedPaths">The selected OData paths.</param>
+    /// <param name="prefix">The current nested prefix, when processing nested dictionaries.</param>
     /// <param name="sort">Sort the keys, if requested, but keep 'Id' first.</param>
-    /// <returns>A new dictionary containing only the selected levels and keys.</returns>
+    /// <returns>A dictionary containing only the selected properties.</returns>
     private static Dictionary<string, object?> CopySelectedLevel(IDictionary<string, object?> current, HashSet<string> wantedPaths, string? prefix, bool sort)
     {
         var result = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
@@ -221,14 +227,14 @@ public class ODataResponseBuilder
         {
             var value = current[key];
             var fullKey = string.IsNullOrEmpty(prefix) ? key : $"{prefix}/{key}";
-            var parentSelected      = wantedPaths.Contains(key) || wantedPaths.Contains(fullKey);
+            var selected = IsSelected(fullKey, wantedPaths);
             var hasNestedSelections = wantedPaths.Any(p => p.StartsWith(fullKey + "/", StringComparison.OrdinalIgnoreCase));
 
             if (value is IDictionary<string, object?> childDict)
             {
-                if (parentSelected)
+                if (selected)
                 {
-                    result[key] = CopySelectedLevel(childDict, wantedPaths, fullKey, sort);
+                    result[key] = childDict;
                     continue;
                 }
 
@@ -244,12 +250,36 @@ public class ODataResponseBuilder
                 continue;
             }
 
-            if (parentSelected || wantedPaths.Contains(key) || wantedPaths.Contains(fullKey))
+            if (selected || hasNestedSelections)
             {
                 result[key] = value;
             }
         }
 
         return result;
+    }
+
+    private static bool IsSelected(string key, HashSet<string> wantedPaths)
+    {
+        if (wantedPaths.Contains(key))
+        {
+            return true;
+        }
+
+        var slashIndex = key.IndexOf('/');
+
+        while (slashIndex > 0)
+        {
+            var parentPath = key[..slashIndex];
+
+            if (wantedPaths.Contains(parentPath))
+            {
+                return true;
+            }
+
+            slashIndex = key.IndexOf('/', slashIndex + 1);
+        }
+
+        return false;
     }
 }

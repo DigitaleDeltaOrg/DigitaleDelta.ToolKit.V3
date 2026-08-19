@@ -52,7 +52,7 @@ public class ODataResponseBuilderTests
 
         var response = builder.Build(applySort: true);
         var dict = response.Value[0];
-        
+
         Assert.Single(dict);
         Assert.True(dict.ContainsKey("Name"));
     }
@@ -94,5 +94,61 @@ public class ODataResponseBuilderTests
         var response = builder.Build();
 
         Assert.Contains("$skiptoken=11111111-1111-1111-1111-111111111111", response.NextLink);
+    }
+
+    [Fact]
+    public void Build_SelectFlatParent_PreservesMatchingSlashPathKeys()
+    {
+        var entities = new[]
+        {
+            new Dictionary<string, object?>
+            {
+                ["Id"]                    = "1",
+                ["Parameter/Compartment"] = "Water",
+                ["Parameter/Quantity"]    = "Waterhoogte",
+                ["Foi/Code"]              = "FOI-1"
+            }
+        };
+
+        var response = entities
+            .CreateODataResponse()
+            .WithBaseUrl("https://example.test")
+            .WithEntitySet("Observations")
+            .WithSelectProperties(new[] { "Parameter" })
+            .Build();
+
+        var entity = Assert.Single(response.Value);
+
+        Assert.Equal("Water", entity["Parameter/Compartment"]);
+        Assert.Equal("Waterhoogte", entity["Parameter/Quantity"]);
+        Assert.False(entity.ContainsKey("Foi/Code"));
+        Assert.False(entity.ContainsKey("Parameter"));
+    }
+
+    [Fact]
+    public void Build_SelectFlatChild_PreservesOnlySelectedSlashPathKey()
+    {
+        var entities = new[]
+        {
+            new Dictionary<string, object?>
+            {
+                ["Id"]                    = "1",
+                ["Parameter/Compartment"] = "Water",
+                ["Parameter/Quantity"]    = "Waterhoogte"
+            }
+        };
+
+        var response = entities
+            .CreateODataResponse()
+            .WithBaseUrl("https://example.test")
+            .WithEntitySet("Observations")
+            .WithSelectProperties(new[] { "Parameter/Compartment" })
+            .Build();
+
+        var entity = Assert.Single(response.Value);
+
+        Assert.Equal("Water", entity["Parameter/Compartment"]);
+        Assert.False(entity.ContainsKey("Parameter/Quantity"));
+        Assert.False(entity.ContainsKey("Parameter"));
     }
 }
