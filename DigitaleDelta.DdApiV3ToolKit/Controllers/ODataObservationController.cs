@@ -65,10 +65,76 @@ public class ODataObservationController : ControllerBase
     /// </returns>
     public async Task<IActionResult> Get()
     {
+        var coverageConfiguration = SetCoverageConfiguration(_oDataQueryServiceParameters.AllowCoverage);
+
+        if (coverageConfiguration?.Errors.Count > 0)
+        {
+            BadRequest(coverageConfiguration.Errors);
+        }
+
         var oDataQueryOptions = Request.ToODataQueryOptions(_oDataQueryServiceParameters.PropertyMap, _oDataQueryServiceParameters.FunctionMap, _oDataQueryServiceParameters.DefaultPageSize, _oDataQueryServiceParameters.MaxPageSize, _oDataQueryServiceParameters.RequireFilter);
-        var queryService = new DigitaleDelta.QueryService.QueryService(_oDataQueryServiceParameters, _logger, _memoryCache, _requestLogger, _authorisationService);
+        var queryService = new DigitaleDelta.QueryService.QueryService(_oDataQueryServiceParameters, _logger, _memoryCache, _requestLogger, _authorisationService, coverageConfiguration);
         var response = await queryService.ProcessRequestAsync(Request.HttpContext, oDataQueryOptions, parameterPrefix: _baseParameters.ParameterPrefix).ConfigureAwait(false);
 
         return response != null ? response : BadRequest();
     }
+
+    private CoverageConfiguration? SetCoverageConfiguration(bool allowCoverage)
+    {
+        if (!allowCoverage)
+        {
+            return null;
+        }
+
+        var coverageConfiguration = new CoverageConfiguration();
+        var parameters = ToGenericParameters(Request.Query);
+        var validationResult = CoverageJSON.ValidateParameters.Validate(parameters);
+
+        if (!validationResult.valid)
+        {
+            validationResult.errors = validationResult.errors;
+
+            return null;
+        }
+
+        if (parameters.TryGetValue("slicebegin", out var sliceStart))
+        {
+            if (DateTimeOffset.TryParse(sliceStart[0], out var sliceStartValue))
+            {
+                coverageConfiguration.SliceBegin = sliceStartValue;
+            }
+        }
+
+        if (parameters.TryGetValue("sliceend", out var sliceEnd))
+        {
+            if (DateTimeOffset.TryParse(sliceEnd[0], out var sliceEndValue))
+            {
+                coverageConfiguration.SliceEnd = sliceEndValue;
+            }
+        }
+
+        if (parameters.TryGetValue("aggregationfunction", out var aggregationFunction))
+        {
+            coverageConfiguration.AggregateFunction = aggregationFunction[0];
+        }
+
+        if (parameters.TryGetValue("aggregationduration", out var aggregationDuration))
+        {
+            coverageConfiguration.AggregateDuration = aggregationDuration[0];
+        }
+
+        if (parameters.TryGetValue("selectaxes", out var axes))
+        {
+            coverageConfiguration.SelectAxes = [.. axes];
+        }
+
+        if (parameters.TryGetValue("selectranges", out var ranges))
+        {
+            coverageConfiguration.SelectRanges = [.. ranges];
+        }
+
+        return coverageConfiguration;
+    }
+
+    private static Dictionary<string, IReadOnlyList<string>> ToGenericParameters(IQueryCollection query) => query.ToDictionary(pair => pair.Key, IReadOnlyList<string> (pair) => [.. pair.Value!]!, StringComparer.OrdinalIgnoreCase);
 }

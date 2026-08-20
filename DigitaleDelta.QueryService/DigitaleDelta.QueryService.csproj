@@ -11,16 +11,17 @@
 
     <ItemGroup>
       <PackageReference Include="Dapper" Version="2.1.79" />
-      <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="2.3.10" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="2.3.12" />
       <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.6" />
-      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.8" />
-      <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.8" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.8" />
-      <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="10.0.8" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.11" />
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.11" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.11" />
+      <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="10.0.11" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.11" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\DigitaleDelta.CoverageJSON\DigitaleDelta.CoverageJSON.csproj" />
       <ProjectReference Include="..\DigitaleDelta.DbRowMaterializer\DigitaleDelta.DbRowMaterializer.csproj" />
       <ProjectReference Include="..\DigitaleDelta.ODataTranslator\DigitaleDelta.ODataTranslator.csproj" />
       <ProjectReference Include="..\DigitaleDelta.ODataWriter\DigitaleDelta.ODataWriter.csproj" />

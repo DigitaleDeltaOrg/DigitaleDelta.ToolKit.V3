@@ -172,4 +172,14 @@ public class ODataQueryServiceParameters
     /// Specifies whether the query requires a filter condition to be present.
     /// </summary>
     public bool RequireFilter { init; get; }
+
+    /// <summary>
+    /// Indicates whether coverage queries are allowed.
+    /// </summary>
+    /// <remarks>
+    /// This property determines if the translation service supports coverage-related queries.
+    /// When enabled, specific SQL components related to data coverage may be included in the query construction.
+    /// </remarks>
+    public bool AllowCoverage { init; get; }
+
 }

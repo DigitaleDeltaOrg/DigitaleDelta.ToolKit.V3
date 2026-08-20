@@ -258,6 +258,7 @@ $"""
         ValidateFunctionMapping(configuration, $"{sectionName}:{functionMapping}");
         ValidateRateLimits(configuration, $"{sectionName}:{rateLimitOptions}");
         ValidateIdField(configuration, sectionName);
+        ValidateDataQueryOrdering(configuration, sectionName);
         ValidateSqlColumnsMatchConfiguration(configuration, sectionName);
     }
 
@@ -812,6 +813,44 @@ $"""
         Log.Error("Configuration error: {error}", error);
         Console.Error.WriteLine($"Configuration error: {error}"); // Always log to the console.
     }
+
+    /// <summary>
+    /// Validates that the data query contains an ORDER BY clause on the configured IdField.
+    /// Keyset pagination uses IdField > @lastId, so the data query must be ordered by the same field
+    /// to prevent skipped or duplicated records.
+    /// </summary>
+    /// <param name="configuration">The configuration manager.</param>
+    /// <param name="sectionName">The section name, e.g. ObservationConfiguration or ReferenceConfiguration.</param>
+    private static void ValidateDataQueryOrdering(IConfigurationManager configuration, string sectionName)
+    {
+        var dataQueryFile = configuration.GetValue<string>($"{sectionName}:DataQueryFile");
+        var idField       = configuration.GetValue<string>($"{sectionName}:IdField");
+
+        if (string.IsNullOrWhiteSpace(dataQueryFile) || !File.Exists(dataQueryFile))
+        {
+            return; // Already validated by ValidateFileExists
+        }
+
+        if (string.IsNullOrWhiteSpace(idField))
+        {
+            return; // Already validated by ValidateIdField
+        }
+
+        var sqlQuery       = File.ReadAllText(dataQueryFile);
+        var escapedIdField = Regex.Escape(idField);
+
+        var hasOrderByIdField = Regex.IsMatch(
+            sqlQuery,
+            $@"\border\s+by\s+(?:(?:[a-zA-Z_][a-zA-Z0-9_]*|\x22[a-zA-Z_][a-zA-Z0-9_]*\x22)\s*\.\s*)?\x22?{escapedIdField}\x22?(?:\s+(?:asc|desc))?(?:\s*,|\s+limit\b|\s+offset\b|\s*$)",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        if (!hasOrderByIdField)
+        {
+            LogError($"Fout in configuratie: Data query '{dataQueryFile}' in {sectionName} moet een ORDER BY op IdField '{idField}' bevatten. " +
+                     "Keyset-paginering gebruikt deze kolom voor @skiptoken; zonder stabiele sortering kunnen records worden overgeslagen.");
+        }
+    }
+
 
     /// <summary>
     /// Validates that all columns referenced in the configuration PropertyMapping exist in the SQL query.

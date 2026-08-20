@@ -1,3 +1,5 @@
+namespace DigitaleDelta.CoverageJSON.Models;
+
 public record Coverage
 {
     public required string Type { get; init; } // "Coverage"

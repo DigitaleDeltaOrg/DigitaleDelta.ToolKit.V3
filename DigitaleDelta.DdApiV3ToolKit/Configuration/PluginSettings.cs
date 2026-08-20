@@ -19,4 +19,6 @@ public class PluginSettings
     /// If not specified, the default console logger will be used.
     /// </summary>
     public string? RequestLogger { get; set; }
+
+    public string? CoverageTransformer { get; set; }
 }

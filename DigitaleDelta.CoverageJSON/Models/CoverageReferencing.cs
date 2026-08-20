@@ -1,3 +1,5 @@
+namespace DigitaleDelta.CoverageJSON.Models;
+
 public record CoverageReferencing
 {
     public required string Href { get; set; }

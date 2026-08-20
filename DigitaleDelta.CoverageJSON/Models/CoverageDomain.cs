@@ -1,3 +1,5 @@
+namespace DigitaleDelta.CoverageJSON.Models;
+
 public record CoverageDomain
 {
     public required string Type { get; init; } // "Domain"

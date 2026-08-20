@@ -1,5 +1,7 @@
 ﻿using System.Text.Json;
 
+namespace DigitaleDelta.CoverageJSON.Models;
+
 public record CoverageAxis
 {
     public required string Name { get; set; }

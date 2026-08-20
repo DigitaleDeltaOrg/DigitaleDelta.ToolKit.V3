@@ -303,6 +303,7 @@ public static class Configure
         var dataQueryFile = builder.Configuration.GetValue<string>($"{key}:DataQueryFile") ?? string.Empty;
         var countQueryFile = builder.Configuration.GetValue<string>($"{key}:CountQueryFile") ?? string.Empty;
         var requireFilter = builder.Configuration.GetValue<bool>($"{key}:RequireFilter");
+        var allowCoverage = builder.Configuration.GetValue<bool?>($"{key}:AllowCoverage") ?? false;
 
         if (propertyMapping == null || propertyMapping.Count == 0)
         {
@@ -328,7 +329,8 @@ public static class Configure
             HmacAlgorithm = builder.Configuration.GetValue<string>("HmacAlgorithm") ?? "HMACSHA256",
             MaxPageSize = builder.Configuration.GetValue<int?>($"{key}:MaxPageSize") ?? 10000,
             DefaultPageSize = builder.Configuration.GetValue<int?>($"{key}:DefaultPageSize") ?? 1000,
-            RequireFilter = requireFilter
+            RequireFilter = requireFilter,
+            AllowCoverage = allowCoverage
         };
     }
 
