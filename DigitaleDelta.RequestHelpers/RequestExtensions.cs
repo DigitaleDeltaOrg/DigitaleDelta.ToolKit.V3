@@ -60,9 +60,28 @@ public static class RequestExtensions
             }
         }
 
-        public string GetUrl() => $"{request.Scheme}://{request.Host}{request.PathBase}{request.Path}{request.QueryString}";
+        /// <summary>
+        /// Retrieves the full URL of the current HTTP request, including the base URL and query string.
+        /// </summary>
+        /// <returns>The full URL of the HTTP request as a string.</returns>
+        public string GetUrl() => $"{request.GetBaseUrl()}{request.QueryString}";
 
-        public string GetBaseUrl() => $"{request.Scheme}://{request.Host}{request.PathBase}{request.Path}";
+        /// <summary>
+        /// Constructs the base URL of the given HTTP request, including the scheme, host, path base, and path.
+        /// </summary>
+        /// <returns>The base URL as a string, combining the scheme and host, and optionally the path base and path if present.</returns>
+        public string GetBaseUrl()
+        {
+            var scheme = request.Headers.TryGetValue("X-Forwarded-Proto", out var proto) && !string.IsNullOrWhiteSpace(proto)
+                ? proto.ToString()
+                : request.Scheme;
+
+            var host = request.Headers.TryGetValue("X-Forwarded-Host", out var forwardedHost) && !string.IsNullOrWhiteSpace(forwardedHost)
+                ? forwardedHost.ToString()
+                : request.Host.ToString();
+
+            return $"{scheme}://{host}{request.PathBase}{request.Path}";
+        }
 
         /// <summary>
         /// Converts the HTTP request query parameters into a structured <see cref="ODataQueryOptions"/> object.
