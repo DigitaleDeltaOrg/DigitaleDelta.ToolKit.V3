@@ -27,6 +27,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\DigitaleDelta.DdApiV3ToolKit\DigitaleDelta.DdApiV3ToolKit.csproj" />
       <ProjectReference Include="..\DigitaleDelta.ODataTranslator\DigitaleDelta.ODataTranslator.csproj" />
       <ProjectReference Include="..\DigitaleDelta.ODataWriter\DigitaleDelta.ODataWriter.csproj" />
     </ItemGroup>

@@ -12,9 +12,14 @@ public static class YamlJsonConverter
     /// <summary>
     /// JSON serializer options.
     /// </summary>
-    private static readonly JsonSerializerOptions _jsonOptions = new()
+    private static readonly JsonSerializerOptions _jsonOptionsIndented = new()
     {
         WriteIndented = true
+    };
+
+    private static readonly JsonSerializerOptions _jsonOptionsCompact = new()
+    {
+        WriteIndented = false
     };
 
     /// <summary>
@@ -25,11 +30,13 @@ public static class YamlJsonConverter
     /// <returns>Json, converted from YAML</returns>
     public static string ConvertYamlToJson(string yaml, bool indented = true)
     {
-        var deserializer = new DeserializerBuilder().Build();
+        var deserializer = new DeserializerBuilder()
+            .WithAttemptingUnquotedStringTypeDeserialization()
+            .Build();
         var obj = deserializer.Deserialize<object>(yaml);
         var normalized = Normalize(obj);
 
-        return JsonSerializer.Serialize(normalized, _jsonOptions);
+        return JsonSerializer.Serialize(normalized, indented ? _jsonOptionsIndented : _jsonOptionsCompact);
     }
 
     /// <summary>
