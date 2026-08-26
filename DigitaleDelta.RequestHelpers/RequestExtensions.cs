@@ -115,9 +115,11 @@ public static class RequestExtensions
                 }
             }
 
+            var effectiveRequireFilter = requireFilter || (propertyMaps.Values.Any(p => p.RequireInFilter));
+
             request.Query.TryGetValue("$filter", out var filterValue);
 
-            if (requireFilter && filterValue.Count == 0)
+            if (effectiveRequireFilter && (filterValue.Count == 0 || string.IsNullOrWhiteSpace(filterValue.FirstOrDefault())))
             {
                 throw new ODataValidationException("Service requires $filter", null, "MissingFilter");
             }
@@ -167,7 +169,7 @@ public static class RequestExtensions
             }
 
             request.Query.TryGetValue("$select", out var selectValue);
-            options.Select = selectValue.ToArray();
+            options.Select = [.. selectValue];
             request.Query.TryGetValue("$count", out var countValue);
 
             if (bool.TryParse(countValue.FirstOrDefault(), out var count))

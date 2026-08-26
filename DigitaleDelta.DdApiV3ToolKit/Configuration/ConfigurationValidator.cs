@@ -20,7 +20,10 @@ namespace DigitaleDelta.DdApiV3ToolKit.Configuration;
 /// </summary>
 public static class ConfigurationValidator
 {
-    private static bool _isValid = true;
+    /// <summary>
+    /// Gets or sets the validation status for testing and internal verification.
+    /// </summary>
+    internal static bool IsValid { get; set; } = true;
     private static CsdlModel? _csdlModel;
     private static readonly string _csdlFileName = Path.Combine(Configure.configurationFilesPath, "csdl.xml");
     private static readonly string _openApiFileName = Path.Combine(Configure.configurationFilesPath, "openapi.yaml");
@@ -70,6 +73,7 @@ public static class ConfigurationValidator
         /// <exception cref="Exception">Thrown if any required configuration section is missing or invalid.</exception>
         public WebApplicationBuilder ValidateConfiguration()
         {
+            IsValid = true;
             ValidateFileExists("CsdlFileName", _csdlFileName);
             ValidateFileExists("OpenApiFileName", _openApiFileName);
             ValidateFileExists("SvgFileName", _svgFileName);
@@ -93,7 +97,7 @@ public static class ConfigurationValidator
             ValidateDefinitions(builder.Configuration, _metadataDefinitions, metadataPrefix, $"{observationConfiguration}:{propertyMapping}");
             ValidateRequiredDefinitions(builder.Configuration);
 
-            return _isValid ? builder : throw new Exception("Configuratie validatie mislukt. Zie bovenstaande fouten voor details.");
+            return IsValid ? builder : throw new Exception("Configuratie validatie mislukt. Zie bovenstaande fouten voor details.");
         }
 
         /// <summary>
@@ -260,6 +264,7 @@ $"""
         ValidateIdField(configuration, sectionName);
         ValidateDataQueryOrdering(configuration, sectionName);
         ValidateSqlColumnsMatchConfiguration(configuration, sectionName);
+        ValidateRequireFilter(configuration, sectionName);
     }
 
     /// <summary>
@@ -517,6 +522,28 @@ $"""
             LogError($"Fout in configuratie: IdField '{idField}' in {sectionName} komt niet voor als ColumnName in {sectionName}:{propertyMapping}. " +
                      "Voeg een PropertyMapping-entry toe met deze ColumnName (en het juiste EdmType, bijv. Edm.Int32 voor een numerieke id-kolom). " +
                      "Zonder deze mapping faalt skiptoken-paginering met een type-mismatch in de database.");
+        }
+    }
+
+    /// <summary>
+    /// Validates that if any property in PropertyMapping has RequireInFilter set to true,
+    /// RequireFilter is also set to true in the configuration section.
+    /// </summary>
+    /// <param name="configuration">The configuration manager.</param>
+    /// <param name="sectionName">The section name (e.g. ObservationConfiguration or ReferenceConfiguration).</param>
+    internal static void ValidateRequireFilter(IConfiguration configuration, string sectionName)
+    {
+        var requireFilter = configuration.GetValue<bool>($"{sectionName}:RequireFilter");
+        var propertyMaps = GetPropertyMaps(configuration, $"{sectionName}:{propertyMapping}");
+
+        var propertiesWithRequireInFilter = propertyMaps
+            .Where(p => p.RequireInFilter)
+            .ToList();
+
+        if (propertiesWithRequireInFilter.Count > 0 && !requireFilter)
+        {
+            var propertyNames = string.Join(", ", propertiesWithRequireInFilter.Select(p => $"'{p.ODataPropertyName}'"));
+            LogError($"Fout in configuratie: In {sectionName} is RequireFilter niet ingeschakeld (of staat op false), terwijl de volgende eigenschappen RequireInFilter = true hebben: {propertyNames}. Zet '{sectionName}:RequireFilter' op true.");
         }
     }
 
@@ -809,7 +836,7 @@ $"""
     /// <param name="error"></param>
     private static void LogError(string error)
     {
-        _isValid = false;
+        IsValid = false;
         Log.Error("Configuration error: {error}", error);
         Console.Error.WriteLine($"Configuration error: {error}"); // Always log to the console.
     }

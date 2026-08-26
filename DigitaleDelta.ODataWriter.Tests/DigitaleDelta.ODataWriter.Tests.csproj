@@ -30,6 +30,7 @@
       <ProjectReference Include="..\DigitaleDelta.DdApiV3ToolKit\DigitaleDelta.DdApiV3ToolKit.csproj" />
       <ProjectReference Include="..\DigitaleDelta.ODataTranslator\DigitaleDelta.ODataTranslator.csproj" />
       <ProjectReference Include="..\DigitaleDelta.ODataWriter\DigitaleDelta.ODataWriter.csproj" />
+      <ProjectReference Include="..\DigitaleDelta.RequestHelpers\DigitaleDelta.RequestHelpers.csproj" />
     </ItemGroup>
 
     <ItemGroup>

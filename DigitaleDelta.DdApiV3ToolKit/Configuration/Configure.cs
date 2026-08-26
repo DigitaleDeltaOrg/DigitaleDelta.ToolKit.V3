@@ -292,7 +292,7 @@ public static class Configure
     /// </summary>
     /// <param name="builder">The <c>WebApplicationBuilder</c> containing the application configuration.</param>
     /// <param name="key">The configuration key prefix used to locate specific query service parameters.</param>
-    /// <param name="setName">The entity set name for which the query service parameters are being created.</param>
+    /// <param name="setName">The name of the entity set for which the query service parameters are being created.</param>
     /// <param name="databaseConnectionFactory">A factory function to create database connection instances.</param>
     /// <returns>An initialised instance of <c>ODataQueryServiceParameters</c>.</returns>
     /// <exception cref="Exception">Thrown when required property mappings or function mappings are not properly configured.</exception>
@@ -302,7 +302,8 @@ public static class Configure
         var functionMapping = builder.Configuration.GetSection($"{key}:FunctionMapping").Get<List<ODataFunctionMap>>();
         var dataQueryFile = builder.Configuration.GetValue<string>($"{key}:DataQueryFile") ?? string.Empty;
         var countQueryFile = builder.Configuration.GetValue<string>($"{key}:CountQueryFile") ?? string.Empty;
-        var requireFilter = builder.Configuration.GetValue<bool>($"{key}:RequireFilter");
+        var requireFilter = builder.Configuration.GetValue<bool>($"{key}:RequireFilter")
+                            || (propertyMapping != null && propertyMapping.Any(p => p.RequireInFilter));
         var allowCoverage = builder.Configuration.GetValue<bool?>($"{key}:AllowCoverage") ?? false;
 
         if (propertyMapping == null || propertyMapping.Count == 0)
@@ -402,9 +403,9 @@ public static class Configure
     /// Configures forwarded headers settings for the application, including supported forwarded headers, known proxies,
     /// and known IP networks, based on the provided configuration. This is typically used in reverse proxy environments.
     /// </summary>
-    /// <param name="services">The IServiceCollection to which the forwarded headers options will be added.</param>
+    /// <param name="services">The IServiceCollection to which the forwarded headers option will be added.</param>
     /// <param name="configuration">The IConfiguration instance containing the forwarded headers configuration settings.</param>
-    private static void ConfigureForwardedHeaders(this IServiceCollection services, IConfiguration configuration)
+    private static void ConfigureForwardedHeaders(this IServiceCollection services, ConfigurationManager configuration)
     {
         services.Configure<ForwardedHeadersOptions>(options =>
         {
