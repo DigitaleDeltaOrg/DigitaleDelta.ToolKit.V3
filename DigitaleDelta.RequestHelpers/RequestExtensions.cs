@@ -115,13 +115,22 @@ public static class RequestExtensions
                 }
             }
 
-            var effectiveRequireFilter = requireFilter || (propertyMaps.Values.Any(p => p.RequireInFilter));
+            var requiredProperties = propertyMaps?.Values
+                .Where(p => p.RequireInFilter)
+                .Select(p => p.ODataPropertyName)
+                .ToList() ?? [];
+
+            var effectiveRequireFilter = requireFilter || requiredProperties.Count > 0;
 
             request.Query.TryGetValue("$filter", out var filterValue);
 
             if (effectiveRequireFilter && (filterValue.Count == 0 || string.IsNullOrWhiteSpace(filterValue.FirstOrDefault())))
             {
-                throw new ODataValidationException("Service requires $filter", null, "MissingFilter");
+                var message = requiredProperties.Count > 0
+                    ? $"Service requires $filter with required property (or properties): {string.Join(", ", requiredProperties.Select(p => $"'{p}'"))}"
+                    : "Service requires $filter";
+
+                throw new ODataValidationException(message, null, "MissingFilter");
             }
 
             var filterString = filterValue.FirstOrDefault() ?? string.Empty;

@@ -57,7 +57,7 @@ public class ODataFilterValidator(Dictionary<string, ODataToSqlMap> propertyMaps
 
         return missingRequiredProperties.Count == 0
             ? (true, null)
-            : (false, string.Join(", ", missingRequiredProperties));
+            : (false, string.Join(" ", missingRequiredProperties));
     }
 
     /// <summary>

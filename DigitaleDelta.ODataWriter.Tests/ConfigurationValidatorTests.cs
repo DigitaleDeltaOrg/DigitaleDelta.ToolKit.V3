@@ -1,6 +1,5 @@
 using DigitaleDelta.DdApiV3ToolKit.Configuration;
 using Microsoft.Extensions.Configuration;
-using Xunit;
 
 namespace DigitaleDelta.ODataWriter.Tests;
 

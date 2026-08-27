@@ -54,7 +54,7 @@ public class RequireInFilterTests
             request.ToODataQueryOptions(propertyMaps, functionMaps, defaultTop: 100, maxTop: 1000, requireFilter: false));
 
         Assert.Equal("MissingFilter", ex.Code);
-        Assert.Equal("Service requires $filter", ex.Message);
+        Assert.Equal("Service requires $filter with required property (or properties): 'Id'", ex.Message);
     }
 
     [Theory]
@@ -78,7 +78,67 @@ public class RequireInFilterTests
             request.ToODataQueryOptions(propertyMaps, functionMaps, defaultTop: 100, maxTop: 1000, requireFilter: false));
 
         Assert.Equal("MissingFilter", ex.Code);
+        Assert.Equal("Service requires $filter with required property (or properties): 'Id'", ex.Message);
+    }
+
+    [Fact]
+    public void ToODataQueryOptions_WhenRequireFilterIsTrue_AndNoRequireInFilter_MissingFilterThrowsGenericException()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+        var request = context.Request;
+        request.Scheme = "https";
+        request.Host = new HostString("example.com");
+        request.Path = "/api/v3/Observation";
+
+        var propertyMaps = CreatePropertyMaps(idRequiredInFilter: false);
+        var functionMaps = CreateFunctionMaps();
+
+        // Act & Assert
+        var ex = Assert.Throws<ODataValidationException>(() =>
+            request.ToODataQueryOptions(propertyMaps, functionMaps, defaultTop: 100, maxTop: 1000, requireFilter: true));
+
+        Assert.Equal("MissingFilter", ex.Code);
         Assert.Equal("Service requires $filter", ex.Message);
+    }
+
+    [Fact]
+    public void ToODataQueryOptions_WhenMultiplePropertiesRequireInFilter_MissingFilterListsAllProperties()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+        var request = context.Request;
+        request.Scheme = "https";
+        request.Host = new HostString("example.com");
+        request.Path = "/api/v3/Observation";
+
+        var propertyMaps = new Dictionary<string, ODataToSqlMap>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["PhenomenonTime/BeginPosition"] = new()
+            {
+                ODataPropertyName = "PhenomenonTime/BeginPosition",
+                Query = "phenomenontime_beginposition",
+                EdmType = "Edm.DateTimeOffset",
+                ColumnName = "phenomenontime_beginposition",
+                RequireInFilter = true
+            },
+            ["Foi/Code"] = new()
+            {
+                ODataPropertyName = "Foi/Code",
+                Query = "foi_code",
+                EdmType = "Edm.String",
+                ColumnName = "foi_code",
+                RequireInFilter = true
+            }
+        };
+        var functionMaps = CreateFunctionMaps();
+
+        // Act & Assert
+        var ex = Assert.Throws<ODataValidationException>(() =>
+            request.ToODataQueryOptions(propertyMaps, functionMaps, defaultTop: 100, maxTop: 1000, requireFilter: false));
+
+        Assert.Equal("MissingFilter", ex.Code);
+        Assert.Equal("Service requires $filter with required property (or properties): 'PhenomenonTime/BeginPosition', 'Foi/Code'", ex.Message);
     }
 
     [Fact]
