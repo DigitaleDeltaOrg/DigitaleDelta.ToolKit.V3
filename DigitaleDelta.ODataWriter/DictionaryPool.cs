@@ -21,10 +21,7 @@ public sealed class DictionaryPool<TKey, TValue>(int initialCapacity = 32, int m
     /// Retrieves a dictionary from the pool or creates a new one if the pool is empty.
     /// </summary>
     /// <returns></returns>
-    public Dictionary<TKey, TValue> Get()
-    {
-        return _pool.TryTake(out var dict) ? dict : new Dictionary<TKey, TValue>(initialCapacity);
-    }
+    public Dictionary<TKey, TValue> Get() => _pool.TryTake(out var dict) ? dict : new Dictionary<TKey, TValue>(initialCapacity);
 
     /// <summary>
     /// Returns a dictionary to the pool if the pool size is below the maximum size.
@@ -39,9 +36,9 @@ public sealed class DictionaryPool<TKey, TValue>(int initialCapacity = 32, int m
             _pool.Add(dict);
             return true;
         }
-        
+
         Interlocked.Decrement(ref _count);
-        
+
         return false;
     }
 

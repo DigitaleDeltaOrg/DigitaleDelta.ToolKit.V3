@@ -1,204 +1,111 @@
-# Uitleg
+# Digitale Delta DD API V3 Toolkit
 
-Uitleg over de architectuur van deze _toolkit_ is [hier](architecture.md) beschreven.
+Deze Toolkit levert een software-implementatie voor het ontsluiten van data volgens de **Digitale Delta API V3**. De Toolkit is een cross-platform .NET 10-project en is bedoeld om zonder eigen DD API V3-implementatie een werkende adapter te realiseren.
 
-**We raden aan om dit te lezen voordat u aan de slag gaat met het project.**
+De inrichting gebeurt primair via configuratiebestanden, SQL-query’s of databaseviews. Organisatiespecifieke softwareontwikkeling is normaal gesproken beperkt tot kleine plugins voor bijvoorbeeld autorisatie en request logging.
 
-De ToolKit is een cross-platform .NET-project voor een `DD API V3` implementatie. De versie van .NET is 10, een zogenaamde LTS-versie (Long Term Support).
-De bedoeling is dat zo min mogelijk code moet worden geschreven om een werkende DD API V3 implementatie te maken.
-De meeste functionaliteit wordt geleverd door NuGet-packages van DD API V3.
+## Documentatie
 
-## Twee Manieren Om Te Gebruiken
+Lees bij voorkeur eerst de documenten in de `Docs`-folder:
 
-Er zijn twee scenario's voor het gebruik van de ToolKit:
+| Document | Doel |
+|----------|------|
+| `Docs/Stappenplan.md` | Besluitvorming over inzet en inrichting, fasering, randvoorwaarden en go/no-go momenten |
+| `Docs/IMPLEMENTATIE-GIDS.md` | Technische configuratie, SQL, mappings, plugins, deployment, logging en troubleshooting |
+| `Docs/MANAGEMENT-OVERZICHT.md` | Business case, planning, risico’s, rollen en besluitvorming |
+| `architecture.md` | Architectuurkeuzes en technische ontwerpprincipes |
 
-### Scenario 1: Als Binary (Aanbevolen voor Productie)
+## Gebruiksscenario's
 
-**Voor wie:** Organisaties die snel willen ontsluiten zonder de source code aan te hoeven passen.
+### Scenario 1: Binary deployment
 
-**Structuur:**
+Aanbevolen voor organisaties die de Toolkit willen gebruiken zonder de source code aan te passen.
 
-```
-JouwDeployment/
-├── DigitaleDelta.DdApiV3ToolKit.dll
-├── [dependency DLLs]
-├── ConfigurationFiles/
-│   ├── appsettings.json
-│   ├── observation-configuration.json
-│   ├── reference-configuration.json
-│   └── *.sql files
-└── Plugins/
-    └── JouwOrganisatie.Plugin.dll
-```
+Globale werkwijze:
 
-**Werkwijze:**
+1. Download of bouw de publish-output van de Toolkit.
+2. Kopieer de benodigde templates naar `ConfigurationFiles`.
+3. Configureer databaseverbinding, query’s, mappings, OpenAPI/OAS en CSDL.
+4. Maak indien nodig een plugin voor autorisatie of request logging.
+5. Plaats plugin-DLL’s in de `Plugins`-folder.
+6. Start de applicatie.
 
-1. Download de ToolKit binaries (publish output)
-2. Maak een eigen plugin project (zie [voorbeeld](#voorbeeld-plugin-project))
-3. Implementeer `IAuthorization` (verplicht) en optioneel `IRequestLogger`
-4. Build je plugin → plaats DLL in `Plugins/` folder
-5. Configureer SQL queries en `appsettings.json`
-6. Start: `dotnet DigitaleDelta.DdApiV3ToolKit.dll`
+Voor details: zie `Docs/IMPLEMENTATIE-GIDS.md`.
 
-**Voordelen:**
+### Scenario 2: Source deployment
 
-- Geen source code klonen nodig
-- Snelle deployment
-- Strikte scheiding tussen ToolKit en custom logica
-- Makkelijk updates installeren
+Geschikt voor ontwikkelaars die de Toolkit lokaal willen draaien, debuggen of aan de Toolkit zelf willen bijdragen.
 
-### Scenario 2: Als Source Code (Voor Ontwikkelaars)
+Ook bij source deployment geldt voor implementaties:
 
-**Voor wie:** Developers die volledige controle willen of de ToolKit zelf willen aanpassen.
+- gebruik configuratiebestanden voor implementatiespecifieke instellingen;
+- gebruik plugins voor autorisatie en request logging;
+- pas de Toolkit-source alleen aan wanneer je bewust aan de Toolkit zelf ontwikkelt.
 
-**Structuur:**
+Voor details: zie `Docs/IMPLEMENTATIE-GIDS.md`.
 
-```
-DigitaleDeltaODataLib/
-├── DigitaleDelta.DdApiV3ToolKit/
-│   ├── Customization/
-│   │   ├── Authorize.cs          ← Direct aanpassen
-│   │   └── RequestLogger.cs      ← Direct aanpassen
-│   └── ConfigurationFiles/
-└── [andere library projecten]
-```
+## Configuratie op hoofdlijnen
 
-**Werkwijze:**
+De belangrijkste implementatiespecifieke bestanden staan in `ConfigurationFiles`, onder andere:
 
-1. Clone de volledige solution van GitHub
-2. Pas `Customization/Authorize.cs` en `Customization/RequestLogger.cs` direct aan
-3. Configureer SQL queries en `appsettings.json`
-4. Build & run: `dotnet run --project DigitaleDelta.DdApiV3ToolKit`
+- `appsettings.json`
+- `observation-configuration.json`
+- `reference-configuration.json`
+- `observation-data.sql`
+- `observation-count.sql`
+- `reference-data.sql`
+- `reference-count.sql`
+- `csdl.xml`
+- `openapi.yaml`
 
-**Voordelen:**
+Pas de originele templates niet direct aan. Kopieer ze eerst naar `ConfigurationFiles`.
 
-- Volledige controle over source code
-- Debugging van de volledige stack
-- Aanpassingen aan de ToolKit zelf mogelijk
+## Database-ondersteuning
 
-De project dependencies zijn als volgt:
+De Toolkit is database-agnostisch en ondersteunt onder andere:
 
-![DigitaleDelta Template dependencies](DigitaleDeltaDependencies.svg)
+- PostgreSQL, eventueel met PostGIS
+- SQL Server
+- MySQL
+- Oracle
+- SQLite
 
-De template ondersteunt de volgende database engines out-of-the-box:
+Gebruik bij voorkeur databaseviews om de interne databasestructuur te ontkoppelen van de DD API V3-mapping.
 
-- **PostgreSQL** (met PostGIS voor spatial data) - aanbevolen
-- **SQL Server** (met spatial types)
-- **MySQL**
-- **Oracle**
-- **SQLite**
+Sinds versie 1.1.0 is de toolkit in staat op met Coverages om te gaan.
+Daarbij geldt: 
+- de coverage wordt niet door de toolkit samengesteld. Dat is aan de database laag
+- de toolkit verwacht een JSON-blob die de coverage bevat. Die is volledig en geldig CoverageJSON.
 
-Het framework zelf is database-agnostisch. Ook hybride setups zoals Postgres + TimescaleDB zijn mogelijk.
+Advies: maak de CoverageJSON niet on-the-fly aan. Dat zorgt mogelijk voor performance bottlenecks.
 
-### Database selecteren
 
-Stel in `appsettings.json` de gewenste database in:
+## Plugin-systeem
 
-```json
-{
-  "DatabaseEngine": "Postgres",
-  "ParameterPrefix": "@",
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=mydb;..."
-  }
-}
-```
+Voor organisatiespecifieke logica kunnen plugins worden gebruikt, bijvoorbeeld voor:
 
-**Let op:** Verschillende databases vereisen verschillende SQL syntax:
+- autorisatie;
+- request logging.
 
-- **Paginatie:** PostgreSQL/MySQL gebruiken `LIMIT`, SQL Server gebruikt `TOP` of `FETCH`, Oracle gebruikt `FETCH FIRST`
-- **Parameter prefix:** PostgreSQL/SQL Server/MySQL gebruiken `@`, Oracle gebruikt `:`
-- **Type casting:** PostgreSQL gebruikt `::`, anderen gebruiken `CAST()` of `CONVERT()`
-- **Spatial functies:** PostGIS (PostgreSQL) gebruikt `ST_*`, SQL Server gebruikt `geography.*` syntax
+Zo blijft de Toolkit zelf generiek en blijven organisatie- of domeinspecifieke keuzes buiten de kerncode.
 
-Zie de [hoofddocumentatie](../README.md#database-selecteren) voor gedetailleerde informatie over database-specifieke configuratie.
+Zo blijft de Toolkit zelf generiek en blijven organisatie- of domeinspecifieke keuzes buiten de kerncode.
 
-De grootste aanpassingen zijn aan de configuratie:
+Zie `Docs/IMPLEMENTATIE-GIDS.md` voor pluginvoorbeelden en configuratie.
 
-- /ConfigurationFiles/appsettings.json: algemene instellingen
-  - Organisation. 
-  - ConnectionString (gebruik een ___read-only___ account)
-  - DatabaseEngine (Postgres, SQLServer, SQLite, Oracle)
-  - TokenSecret
-  - RateLimiting
-- /ConfigurationFiles/observation-count.sql (SQL-query voor telling van observaties, aanpassen aan database en tabellen)
-- /ConfigurationFiles/observation-data.sql (SQL-query van observaties, aanpassen aan database en tabellen)
-- /ConfigurationFiles/reference-count.sql (SQL-query voor telling van referenties, aanpassen aan database en tabellen)
-- /ConfigurationFiles/reference-data.sql (SQL-query van referenties, aanpassen aan database en tabellen)
-- /ConfigurationFiles/ObservationConfiguration (aanpassen aan parameters en functies naar database)
-- /ConfigurationFiles/ReferenceConfiguration (aanpassen aan parameters en functies naar database)
-- /ConfigurationFiles/csdl.xml (OData definitie, aanpassen op de aangegeven plekken. ComplexTypes `Parameter` en `Metadata` worden automatisch aangepast door de applicatie.)
-- /ConfigurationFiles/openapi.yaml (Open API-definitie, aanpassen op de aangegeven plekken. `#/components/schemas/DigitaleDelta.Parameter` en `#/components/schemas/DigitaleDelta.Metadata` worden automatisch aangepast door de applicatie.)
+## Deployment
 
-## Plugin Systeem
+De Toolkit kan onder andere draaien als:
 
-**NIEUW:** De ToolKit gebruikt nu een plugin systeem. Je hoeft de code niet meer aan te passen voor authenticatie. In plaats daarvan:
+- binary deployment;
+- source deployment;
+- container;
+- service achter een reverse proxy.
 
-1. **Maak een eigen DLL** met implementaties van:
-   - `IAuthorization` voor authenticatie en autorisatie logica
-   - `IRequestLogger` voor request/response logging (optioneel, standaard implementatie beschikbaar)
+Voor productiegebruik moeten beveiliging, logging, monitoring, performance, beheer en acceptatie expliciet worden ingericht.
 
-2. **Plaats de DLL** in de `Plugins` folder (of in een andere directory als geconfigureerd in `appsettings.json`)
+## Proof-of-concept en productie
 
-3. **Configureer** in `appsettings.json`:
+Een beperkte proof-of-concept kan snel worden gerealiseerd wanneer brondata goed beschikbaar is en via een databaseview kan worden aangeboden. Een productiewaardige inrichting vraagt aanvullende aandacht voor productiecapaciteit, schaalbaarheid, security, monitoring, logging, performance, documentatie, beheer en formele acceptatie.
 
-   ```json
-   {
-     "PluginSettings": {
-       "PluginDirectory": "Plugins",
-       "AuthorizationHandler": "YourNamespace.YourAuthHandler, YourAssembly",
-       "RequestLogger": "YourNamespace.YourLogger, YourAssembly"
-     }
-   }
-   ```
-
-### Voorbeeld Plugin Project
-
-Zie de `DigitaleDelta.DdApiV3ToolKit.ExamplePlugin` folder voor een complete voorbeeld implementatie. Dit project laat zien:
-
-- Hoe je `IAuthorization` implementeert
-- Hoe je `IRequestLogger` implementeert
-- Hoe je dependency injection gebruikt in plugins
-- Hoe je de plugin compileert en deployt
-
-### Quick Start met Plugin
-
-```bash
-# 1. Bouw het voorbeeld plugin project
-cd DigitaleDelta.DdApiV3ToolKit.ExamplePlugin
-dotnet build -c Release
-
-# 2. Kopieer de DLL naar de Plugins folder
-mkdir ../DigitaleDelta.DdApiV3ToolKit/Plugins
-cp bin/Release/net10.0/DigitaleDelta.DdApiV3ToolKit.ExamplePlugin.dll ../DigitaleDelta.DdApiV3ToolKit/Plugins/
-
-# 3. Configureer in appsettings.json (zie hierboven)
-```
-
-De ToolKit zal automatisch je plugin ontdekken en laden bij het opstarten.
-
----
-
-## Cross-Platform Deployment
-
-De ToolKit is volledig cross-platform dankzij .NET 10:
-
-**Windows:**
-
-```bash
-dotnet DigitaleDelta.DdApiV3ToolKit.dll
-```
-
-**Linux/macOS:**
-
-```bash
-dotnet DigitaleDelta.DdApiV3ToolKit.dll
-```
-
----
-
-## Docker & Container Deployment
-
-De ToolKit kan eenvoudig in een Docker-container worden gedraaid. Het doel van de container is **generiek** te blijven zodat organisaties zelf kunnen bepalen:
-- waar de container wordt gehost (on-prem, cloud, Kubernetes, Docker Swarm, enz.);
-- welke reverse proxy wordt gebruikt (nginx, IIS, Traefik, Ingress-controller, 
+Zie `Docs/Stappenplan.md` voor de aanbevolen fasering.

@@ -47,6 +47,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="logs\" />
       <Folder Include="Plugins\" />
       <Folder Include="wwwroot\" />
     </ItemGroup>
