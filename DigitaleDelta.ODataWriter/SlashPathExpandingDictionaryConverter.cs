@@ -166,12 +166,12 @@ public sealed class SlashPathExpandingDictionaryConverter : JsonConverter<Dictio
                     writer.WriteRawValue(raw.Json);
                     break;
 
-                case DateTime dt:
-                    writer.WriteStringValue(DateTime.SpecifyKind(dt, DateTimeKind.Utc).ToString("O")); // Forceer UTC + ISO 8601
-                    break;
-
                 case DateTimeOffset dto:
                     writer.WriteStringValue(dto.ToString("O")); // Forceer altijd ISO 8601 met timezone (bv. "2024-01-15T14:30:00.0000000Z")
+                    break;
+
+                case DateTime dt:
+                    writer.WriteStringValue(DateTime.SpecifyKind(dt, DateTimeKind.Utc).ToString("O")); // Forceer UTC + ISO 8601
                     break;
 
                 case Dictionary<string, object?> dict:
